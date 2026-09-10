@@ -179,7 +179,11 @@ async def chat_endpoint(message: ChatMessage):
     response_text = await asyncio.to_thread(process_input, message.text, message.session_id)
 
     audio_url = None
-    if response_text and settings.voice_enabled:
+    speakable = bool(response_text) and len(response_text) <= settings.TTS_MAX_CHARS
+    if response_text and not speakable:
+        audit.log_event("tts.skipped", {"chars": len(response_text), "reason": "too_long"})
+
+    if speakable and settings.voice_enabled:
         try:
             filename = await asyncio.to_thread(_synthesize, response_text)
             audio_url = f"/static/audio/{filename}"

@@ -49,6 +49,12 @@ class Settings(BaseSettings):
     ELEVENLABS_STYLE: float | None = 0.25
     ELEVENLABS_SPEAKER_BOOST: bool = True
 
+    # ElevenLabs bills per character. Tool output - file dumps, directory
+    # trees, search hits - is both expensive and pointless to speak aloud:
+    # one 2.2KB file read cost 2,262 credits of a 10,000 credit quota. Replies
+    # longer than this are delivered as text only.
+    TTS_MAX_CHARS: int = Field(600, description="Skip speech synthesis above this length")
+
     # Pitch depth applied after synthesis. ElevenLabs has no pitch control, so
     # this is a local libavfilter pass. 1.0 = untouched, lower = deeper.
     VOICE_PITCH: float = Field(1.0, ge=0.7, le=1.0)
