@@ -21,8 +21,13 @@ class Settings(BaseSettings):
 
     # Ollama Settings
     OLLAMA_HOST: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "llama3.2"
+    OLLAMA_MODEL: str = "qwen2.5:14b"
     OLLAMA_TIMEOUT: float = 60.0
+    # Ollama unloads an idle model after ~4 minutes by default. Reloading 9GB
+    # costs over two minutes, so the first message after any pause would hang.
+    # This must be a duration WITH a unit - a bare "-1" is rejected with
+    # 'missing unit in duration'. Use "-1s" to pin it indefinitely.
+    OLLAMA_KEEP_ALIVE: str = "24h"
     # Every reply is spoken aloud and TTS latency scales with length
     # (eleven_v3 costs roughly 28ms per character), so this doubles as the
     # main latency control. ~90 tokens lands around 250-350 characters.
@@ -51,7 +56,7 @@ class Settings(BaseSettings):
     # Speech-to-text (local faster-whisper - audio never leaves the machine)
     STT_DEVICE: str = Field("auto", description="auto | cuda | cpu")
     STT_MODEL_GPU: str = "distil-large-v3"
-    STT_MODEL_CPU: str = "base.en"
+    STT_MODEL_CPU: str = "small.en"
     STT_BEAM_SIZE: int = 1
     STT_LANGUAGE: str = Field("en", description="Empty string = autodetect")
     STT_MAX_UPLOAD_BYTES: int = Field(25 * 1024 * 1024, description="Reject oversized audio uploads")

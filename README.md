@@ -151,6 +151,27 @@ The model downloads from HuggingFace on first use (~1.5GB for distil-large-v3)
 and is cached in `~/.cache/huggingface`. It is warmed in a background thread at
 server startup so the first utterance is not charged the load time.
 
+### VRAM budget
+
+The reasoning model and the speech model compete for the same card. On a 12GB
+GPU, `qwen2.5:14b` (9.5GB, pinned in VRAM by `OLLAMA_KEEP_ALIVE`) plus
+`distil-large-v3` on CUDA plus the desktop exceeds capacity, and everything
+thrashes: requests that normally take under a second stall for minutes at 100%
+GPU utilisation with no error.
+
+The default split gives the GPU to the reasoning model and runs speech on the
+CPU (`STT_DEVICE=cpu`, `small.en`, ~0.7s). If you switch to a smaller LLM you
+can move speech back to the GPU for more accuracy and lower latency.
+
+**Troubleshooting:** if generation suddenly becomes glacial, check for
+orphaned model servers — stopping `ollama.exe` does not always kill its
+children, and two resident copies will oversubscribe the card:
+
+```powershell
+nvidia-smi --query-gpu=memory.used --format=csv,noheader
+Get-Process llama-server | Stop-Process -Force
+```
+
 ### GPU notes
 
 CTranslate2 needs cuBLAS and cuDNN. Those come from the `nvidia-cublas-cu12`

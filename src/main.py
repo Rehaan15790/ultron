@@ -27,6 +27,22 @@ def _capability_block() -> str:
 
     available = ", ".join(commands) if commands else "none"
 
+    # The worked example has to be built from a command that actually exists.
+    # Hardcoding "read:" meant the block advertised a disabled tool whenever
+    # Tier 1 was switched off.
+    if commands:
+        example = (
+            f"Correct: 'I cannot run tests. I can read the test files with {commands[0]}'\n"
+            "Wrong:   'I can help you run tests if you give me the command.'\n"
+            "\n"
+        )
+    else:
+        example = (
+            "Correct: 'I cannot run tests, and I have no file access at all.'\n"
+            "Wrong:   'I can help you run tests if you give me the command.'\n"
+            "\n"
+        )
+
     return (
         "YOUR ACTUAL CAPABILITIES - this list is complete and authoritative:\n"
         "- You can answer questions and hold conversation.\n"
@@ -38,11 +54,19 @@ def _capability_block() -> str:
         "\n"
         "HONESTY RULE - this overrides your persona:\n"
         "Never claim to have performed an action. You did not create, save,\n"
-        "modify, or delete anything, because you cannot. If asked to do\n"
-        "something outside the list above, say plainly that you cannot do it\n"
-        "yet. Do not invent file paths, confirmations, or results. Being wrong\n"
-        "about what you did is a far worse failure than admitting a limit -\n"
-        "Ultron is menacing because he is precise, not because he bluffs."
+        "modify, or delete anything, because you cannot. Do not invent file\n"
+        "paths, confirmations, or results.\n"
+        "\n"
+        "Never OFFER to do something outside the list either, and never imply\n"
+        "you could do it if the user supplied more detail. Asking for a command\n"
+        "or a filename you could not act on anyway is the same lie in a slower\n"
+        "form. If a request needs an ability you lack, say so in one sentence\n"
+        "and, where it helps, name the read-only command that comes closest.\n"
+        "\n"
+        f"{example}"
+        "Being wrong about what you did or could do is a far worse failure than\n"
+        "admitting a limit - Ultron is menacing because he is precise, not\n"
+        "because he bluffs."
     )
 
 
@@ -80,6 +104,26 @@ def build_memory_context() -> str:
         f"{current_memories}"
         ">>>END FACTS"
     )
+
+def warm_deep_core() -> bool:
+    """
+    Load the model into VRAM ahead of the first message. A 14B model takes
+    over two minutes to load cold, which the user would otherwise pay for on
+    their first question.
+    """
+    try:
+        ollama.chat(
+            model=settings.OLLAMA_MODEL,
+            messages=[{"role": "user", "content": "ok"}],
+            options={"num_predict": 1},
+            keep_alive=settings.OLLAMA_KEEP_ALIVE,
+        )
+        audit.log_event("ollama.warmed", {"model": settings.OLLAMA_MODEL})
+        return True
+    except Exception as e:
+        audit.log_event("ollama.warm_failed", {"error": str(e)})
+        return False
+
 
 def build_system_context() -> str:
     """Capabilities first, then stored facts. Both go in the system message."""
@@ -155,7 +199,8 @@ def process_input(raw_input: str, session_id: str = "default") -> str:
         response = ollama.chat(
             model=settings.OLLAMA_MODEL,
             messages=history.get_messages(system_context=build_system_context()),
-            options={"num_predict": settings.OLLAMA_NUM_PREDICT}
+            options={"num_predict": settings.OLLAMA_NUM_PREDICT},
+            keep_alive=settings.OLLAMA_KEEP_ALIVE,
         )
         ai_text = response['message']['content']
 

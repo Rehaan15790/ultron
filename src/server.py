@@ -12,7 +12,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 
 from src.config import settings
-from src.main import process_input
+from src.main import process_input, warm_deep_core
 from src.security.audit import audit
 from src.tools.p1_tools import read_cpu_percent, read_ram_percent
 from src.voice.stt import transcriber
@@ -33,9 +33,11 @@ if settings.voice_enabled:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Warm the speech model in the background so the first utterance is not
-    # charged the full model-load time.
+    # Warm both models in the background so the first message and the first
+    # utterance are not charged the full load time. Separate threads: a 9GB
+    # LLM load must not delay speech being ready.
     threading.Thread(target=_safe_warmup, daemon=True).start()
+    threading.Thread(target=warm_deep_core, daemon=True).start()
     yield
 
 
