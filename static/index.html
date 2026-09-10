@@ -1,777 +1,1262 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ULTRON // SENTIENT CORE</title>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --crimson: #ff003c;
-            --dark-crimson: #8a0020;
-            --ember: #ff6600;
-            --bright-ember: #ffaa00;
-            --black: #000000;
-            --deep-red: #1a0000;
-            --glow-strong: 0 0 20px rgba(255, 0, 60, 0.8), 0 0 40px rgba(255, 0, 60, 0.5), 0 0 60px rgba(255, 0, 60, 0.3);
-            --text-glow: 0 0 10px rgba(255, 0, 60, 1);
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            margin: 0;
-            background: radial-gradient(ellipse at center, #1a0000 0%, #000000 100%);
-            color: var(--crimson);
-            font-family: 'Share Tech Mono', monospace;
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            position: relative;
-        }
-        body::before {
-            content: "";
-            position: absolute;
-            width: 200%;
-            height: 200%;
-            background-image: 
-                linear-gradient(rgba(255, 0, 60, 0.03) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 0, 60, 0.03) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: gridMove 20s linear infinite;
-            pointer-events: none;
-            z-index: 0;
-        }
-        @keyframes gridMove {
-            0% { transform: translate(0, 0); }
-            100% { transform: translate(50px, 50px); }
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ULTRON // SENTIENT CORE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+    /* Substrate */
+    --void:        #050507;
+    --carbon:      #0b0b0f;
+    --panel:       #0d0d12;
+    --panel-hi:    #121219;
 
-        #core-container {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            z-index: 1;
-        }
-        .core-wrapper {
-            position: relative;
-            width: 600px;
-            height: 600px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .ring {
-            position: absolute;
-            border-radius: 50%;
-            border: 2px solid var(--dark-crimson);
-            box-shadow: var(--glow-strong), inset 0 0 30px rgba(255, 0, 60, 0.3);
-            transition: all 0.15s ease-out;
-        }
-        .ring-1 { width: 500px; height: 500px; border-width: 3px; }
-        .ring-2 { width: 420px; height: 420px; border-width: 2px; opacity: 0.7; }
-        .ring-3 { width: 340px; height: 340px; border-width: 1px; opacity: 0.4; }
-        
-        .ring.active {
-            border-color: var(--crimson);
-            box-shadow: 0 0 40px var(--crimson), inset 0 0 50px var(--crimson);
-            animation: ringPulse 0.5s ease-out;
-        }
-        @keyframes ringPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-        
-        canvas {
-            position: absolute;
-            z-index: 10;
-            filter: drop-shadow(0 0 20px rgba(255, 100, 0, 0.6));
-        }
-        
-        #state-display {
-            margin-top: 40px;
-            text-align: center;
-        }
-        #state-label {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
-            font-weight: 900;
-            letter-spacing: 12px;
-            text-transform: uppercase;
-            color: var(--crimson);
-            text-shadow: var(--text-glow), 0 0 20px rgba(255, 0, 60, 0.8);
-            animation: statePulse 1.5s ease-in-out infinite;
-        }
-        @keyframes statePulse {
-            0%, 100% { opacity: 0.8; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.02); }
-        }
-        #state-subtext {
-            font-size: 0.9rem;
-            letter-spacing: 4px;
-            color: var(--ember);
-            margin-top: 10px;
-            opacity: 0.7;
-        }
+    /* Core signal */
+    --crimson:     #ff1e3c;
+    --crimson-mid: #c4102a;
+    --crimson-low: #6b0817;
+    --ember:       #ff6a1f;
 
-        #terminal-container {
-            width: 500px;
-            background: linear-gradient(180deg, rgba(26,0,0,0.9) 0%, rgba(0,0,0,0.95) 100%);
-            border-left: 3px solid var(--crimson);
-            display: flex;
-            flex-direction: column;
-            padding: 25px;
-            box-shadow: -15px 0 40px rgba(255, 0, 60, 0.2);
-            z-index: 5;
-            position: relative;
-        }
-        #terminal-header {
-            border-bottom: 2px solid var(--crimson);
-            padding-bottom: 15px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        #terminal-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.3rem;
-            font-weight: 700;
-            letter-spacing: 3px;
-            color: var(--crimson);
-            text-shadow: var(--text-glow);
-        }
-        #system-stats {
-            display: flex;
-            gap: 20px;
-            font-size: 0.85rem;
-        }
-        .stat { color: var(--ember); }
-        .stat-label { color: #666; margin-right: 5px; }
-        
-        #terminal-log {
-            flex: 1;
-            overflow-y: auto;
-            font-size: 0.95rem;
-            line-height: 1.6;
-            margin-bottom: 20px;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.6);
-            border: 1px solid var(--dark-crimson);
-            box-shadow: inset 0 0 20px rgba(255, 0, 60, 0.1);
-        }
-        .log-entry { 
-            margin-bottom: 12px; 
-            padding: 8px;
-            border-left: 3px solid transparent;
-            animation: slideIn 0.3s ease-out;
-        }
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(-10px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        .log-entry.system { 
-            color: #ff6666; 
-            border-left-color: var(--crimson);
-            background: rgba(255, 0, 60, 0.05);
-        }
-        .log-entry.user { 
-            color: #ffffff; 
-            border-left-color: #666;
-            background: rgba(255, 255, 255, 0.03);
-        }
-        .log-entry.ai { 
-            color: var(--crimson); 
-            border-left-color: var(--ember);
-            background: rgba(255, 100, 0, 0.05);
-            text-shadow: var(--text-glow);
-            font-weight: 500;
-        }
-        .log-entry .timestamp { 
-            color: #880000; 
-            font-size: 0.8rem; 
-            margin-right: 10px;
-            font-weight: bold;
-        }
+    /* Secondary telemetry */
+    --amber:       #ffb020;
+    --ice:         #4dd4ff;
 
-        #input-area {
-            display: flex;
-            gap: 15px;
-            border-top: 2px solid var(--dark-crimson);
-            padding-top: 20px;
-        }
-        input[type="text"] {
-            flex: 1;
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid var(--dark-crimson);
-            color: var(--crimson);
-            padding: 15px;
-            font-family: 'Share Tech Mono', monospace;
-            font-size: 1.1rem;
-            outline: none;
-            transition: all 0.3s;
-            letter-spacing: 2px;
-        }
-        input[type="text"]:focus {
-            border-color: var(--crimson);
-            box-shadow: 0 0 20px rgba(255, 0, 60, 0.4), inset 0 0 10px rgba(255, 0, 60, 0.1);
-            background: rgba(26, 0, 0, 0.7);
-        }
-        button {
-            background: linear-gradient(180deg, var(--crimson) 0%, var(--dark-crimson) 100%);
-            color: white;
-            border: 2px solid var(--crimson);
-            padding: 15px 35px;
-            cursor: pointer;
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1rem;
-            font-weight: 700;
-            letter-spacing: 3px;
-            transition: all 0.2s;
-            box-shadow: 0 0 15px rgba(255, 0, 60, 0.4);
-        }
-        button:hover {
-            background: linear-gradient(180deg, #ff3333 0%, var(--crimson) 100%);
-            box-shadow: 0 0 30px rgba(255, 0, 60, 0.8);
-            transform: translateY(-2px);
-        }
-        button:active {
-            transform: translateY(0);
-        }
-        button.mic {
-            padding: 15px 22px;
-            letter-spacing: 1px;
-        }
-        button.mic.recording {
-            background: linear-gradient(180deg, #fff 0%, var(--crimson) 100%);
-            color: #1a0000;
-            animation: micPulse 1s ease-in-out infinite;
-        }
-        button.mic:disabled {
-            opacity: 0.45;
-            cursor: not-allowed;
-            animation: none;
-        }
-        @keyframes micPulse {
-            0%, 100% { box-shadow: 0 0 15px rgba(255, 0, 60, 0.5); }
-            50%      { box-shadow: 0 0 35px rgba(255, 0, 60, 1); }
-        }
-        
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #000; }
-        ::-webkit-scrollbar-thumb { 
-            background: var(--dark-crimson); 
-            border: 1px solid var(--crimson);
-        }
-    </style>
+    /* Type */
+    --text:        #d2d4dc;
+    --text-dim:    #8b8f9e;
+    --text-mute:   #5a5e6c;
+
+    /* Structure */
+    --hair:        rgba(255, 30, 60, 0.16);
+    --hair-bright: rgba(255, 30, 60, 0.42);
+    --hair-cold:   rgba(120, 130, 150, 0.12);
+
+    --glow-crimson: 0 0 0 1px rgba(255,30,60,.10), 0 0 18px -4px rgba(255,30,60,.55);
+    --glow-tight:   0 0 10px -2px rgba(255,30,60,.7);
+
+    --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+    --sans: 'Inter', system-ui, sans-serif;
+
+    --r: 2px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body { height: 100%; }
+
+body {
+    background: var(--void);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 13px;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ---------- Ambient substrate: grid, vignette, scanline ---------- */
+
+.substrate { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+
+.substrate::before {
+    content: "";
+    position: absolute; inset: -50%;
+    background-image:
+        linear-gradient(rgba(255,30,60,.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,30,60,.028) 1px, transparent 1px);
+    background-size: 46px 46px;
+    animation: gridDrift 24s linear infinite;
+}
+@keyframes gridDrift {
+    0%   { transform: translate(0,0); }
+    100% { transform: translate(46px,46px); }
+}
+
+.substrate::after {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+        radial-gradient(ellipse 120% 80% at 30% 45%, rgba(120,8,25,.16) 0%, transparent 62%),
+        radial-gradient(ellipse 90% 70% at 50% 120%, rgba(255,30,60,.07) 0%, transparent 60%);
+}
+
+.scanline {
+    position: fixed; left: 0; right: 0; height: 140px;
+    background: linear-gradient(180deg, transparent, rgba(255,30,60,.035) 45%, rgba(255,30,60,.06) 50%, transparent);
+    animation: sweep 7.5s linear infinite;
+    pointer-events: none; z-index: 1;
+}
+@keyframes sweep {
+    0%   { top: -140px; }
+    100% { top: 100%; }
+}
+
+/* ---------- Shell ---------- */
+
+.shell {
+    position: relative; z-index: 2;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: 44px 1fr 62px;
+    gap: 1px;
+    background: var(--hair-cold);
+}
+
+/* ---------- Top rail ---------- */
+
+.toprail {
+    background: var(--carbon);
+    display: flex; align-items: center;
+    padding: 0 16px; gap: 18px;
+    border-bottom: 1px solid var(--hair);
+}
+
+.mark { display: flex; align-items: baseline; gap: 10px; }
+.mark .glyph {
+    font-family: var(--sans);
+    font-weight: 800; font-size: 15px; letter-spacing: .34em;
+    color: var(--crimson);
+    text-shadow: 0 0 14px rgba(255,30,60,.55);
+}
+.mark .sub {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: .22em;
+    color: var(--text-mute); text-transform: uppercase;
+}
+
+.rail-div { width: 1px; height: 18px; background: var(--hair); }
+
+.chips { display: flex; align-items: center; gap: 14px; margin-left: auto; }
+
+.chip {
+    display: flex; align-items: center; gap: 7px;
+    font-family: var(--mono); font-size: 10px; letter-spacing: .1em;
+}
+.chip .k { color: var(--text-mute); text-transform: uppercase; }
+.chip .v { color: var(--text-dim); }
+.chip .v.hot  { color: var(--crimson); }
+.chip .v.cold { color: var(--ice); }
+.chip .v.warm { color: var(--amber); }
+
+.led {
+    width: 5px; height: 5px; border-radius: 50%;
+    background: var(--crimson);
+    box-shadow: 0 0 7px var(--crimson);
+    animation: breathe 2.4s ease-in-out infinite;
+}
+.led.cold { background: var(--ice); box-shadow: 0 0 7px var(--ice); }
+.led.dead { background: #3a3d47; box-shadow: none; animation: none; }
+@keyframes breathe { 0%,100%{opacity:1} 50%{opacity:.32} }
+
+/* ---------- Stage ---------- */
+
+.stage {
+    display: grid;
+    grid-template-columns: 1fr 452px;
+    gap: 1px;
+    min-height: 0;
+    background: var(--hair-cold);
+}
+
+/* ---------- Panels & structural detail ---------- */
+
+.panel {
+    position: relative;
+    background: var(--panel);
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    min-height: 0;
+}
+
+/* Corner brackets */
+.panel > .bracket {
+    position: absolute; width: 11px; height: 11px;
+    border-color: var(--hair-bright); pointer-events: none;
+}
+.bracket.tl { top: -1px; left: -1px;  border-top: 1px solid; border-left: 1px solid; }
+.bracket.tr { top: -1px; right: -1px; border-top: 1px solid; border-right: 1px solid; }
+.bracket.bl { bottom: -1px; left: -1px;  border-bottom: 1px solid; border-left: 1px solid; }
+.bracket.br { bottom: -1px; right: -1px; border-bottom: 1px solid; border-right: 1px solid; }
+
+.panel-head {
+    display: flex; align-items: center; gap: 9px;
+    height: 30px; padding: 0 11px;
+    border-bottom: 1px solid var(--hair);
+    background: linear-gradient(180deg, rgba(255,30,60,.045), transparent);
+}
+.panel-head .idx {
+    font-family: var(--mono); font-size: 9px; color: var(--crimson-mid);
+    letter-spacing: .1em;
+}
+.panel-head .title {
+    font-family: var(--sans); font-weight: 700; font-size: 10.5px;
+    letter-spacing: .2em; text-transform: uppercase; color: var(--text-dim);
+}
+.panel-head .meter {
+    margin-left: auto; font-family: var(--mono); font-size: 9.5px;
+    color: var(--text-mute); letter-spacing: .08em;
+}
+.panel-head .meter b { color: var(--amber); font-weight: 500; }
+
+/* Tech line: a thin rule with a notch, used as a divider */
+.techline {
+    height: 1px; background: var(--hair); position: relative;
+}
+.techline::after {
+    content: ""; position: absolute; left: 14px; top: -2px;
+    width: 22px; height: 5px;
+    border-left: 1px solid var(--hair-bright);
+    border-right: 1px solid var(--hair-bright);
+}
+
+/* ---------- Core visualiser ---------- */
+
+.core-panel {
+    display: flex; flex-direction: column;
+    overflow: hidden;
+}
+
+.core-stage {
+    flex: 1; position: relative;
+    display: flex; align-items: center; justify-content: center;
+    min-height: 0;
+}
+
+/* Crosshair reticle spanning the stage */
+.reticle { position: absolute; inset: 0; pointer-events: none; }
+.reticle .h, .reticle .v { position: absolute; background: rgba(255,30,60,.10); }
+.reticle .h { left: 0; right: 0; height: 1px; top: 50%; }
+.reticle .v { top: 0; bottom: 0; width: 1px; left: 50%; }
+.reticle .tick {
+    position: absolute; background: var(--hair-bright);
+}
+.reticle .tick.t1 { top: 50%; left: 26px; width: 16px; height: 1px; }
+.reticle .tick.t2 { top: 50%; right: 26px; width: 16px; height: 1px; }
+.reticle .tick.t3 { left: 50%; top: 22px; height: 16px; width: 1px; }
+.reticle .tick.t4 { left: 50%; bottom: 22px; height: 16px; width: 1px; }
+
+.reticle .corner-read {
+    position: absolute; font-family: var(--mono); font-size: 9px;
+    color: var(--text-mute); letter-spacing: .12em;
+}
+.reticle .corner-read.a { top: 14px; left: 16px; }
+.reticle .corner-read.b { top: 14px; right: 16px; text-align: right; }
+.reticle .corner-read.c { bottom: 14px; left: 16px; }
+.reticle .corner-read.d { bottom: 14px; right: 16px; text-align: right; }
+.reticle .corner-read i { color: var(--crimson-mid); font-style: normal; }
+
+.core-wrap {
+    position: relative;
+    width: min(58vh, 540px); height: min(58vh, 540px);
+    display: flex; align-items: center; justify-content: center;
+}
+
+.ring {
+    position: absolute; border-radius: 50%;
+    border: 1px solid var(--crimson-low);
+    transition: border-color .2s, box-shadow .2s;
+}
+.ring-1 { inset: 0; }
+.ring-2 { inset: 9%; border-style: dashed; opacity: .55; }
+.ring-3 { inset: 19%; opacity: .35; }
+
+.ring.active {
+    border-color: var(--crimson-mid);
+    box-shadow: 0 0 26px -6px rgba(255,30,60,.7), inset 0 0 34px -14px rgba(255,30,60,.6);
+}
+
+/* Rotating segmented gauge */
+.gauge {
+    position: absolute; inset: -5%;
+    border-radius: 50%;
+    border: 1px dashed rgba(255,30,60,.18);
+    animation: spin 44s linear infinite;
+}
+.gauge.rev { inset: -11%; animation: spin 70s linear infinite reverse; border-style: dotted; opacity: .5; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+canvas#coreCanvas {
+    position: absolute;
+    width: 100%; height: 100%;
+    filter: drop-shadow(0 0 22px rgba(255,80,20,.5));
+    /* At peak energy the field reaches the canvas bounds and the square edge
+       becomes visible. Fade it radially so it reads as a core, not a box. */
+    -webkit-mask-image: radial-gradient(circle at center, #000 46%, rgba(0,0,0,.55) 66%, transparent 80%);
+    mask-image: radial-gradient(circle at center, #000 46%, rgba(0,0,0,.55) 66%, transparent 80%);
+}
+
+/* State readout */
+.state-block {
+    padding: 12px 18px 14px;
+    border-top: 1px solid var(--hair);
+    background: linear-gradient(0deg, rgba(255,30,60,.04), transparent);
+    display: flex; align-items: flex-end; gap: 20px;
+}
+.state-main { min-width: 0; }
+#state-label {
+    font-family: var(--sans);
+    font-weight: 800; font-size: 26px; letter-spacing: .3em;
+    color: var(--crimson); line-height: 1;
+    text-shadow: 0 0 22px rgba(255,30,60,.5);
+}
+#state-subtext {
+    font-family: var(--mono); font-size: 9.5px; letter-spacing: .2em;
+    color: var(--text-mute); text-transform: uppercase; margin-top: 8px;
+}
+
+.state-metrics { margin-left: auto; display: flex; gap: 22px; }
+.metric { min-width: 74px; }
+.metric .lbl {
+    font-family: var(--mono); font-size: 8.5px; letter-spacing: .16em;
+    color: var(--text-mute); text-transform: uppercase;
+}
+.metric .val {
+    font-family: var(--mono); font-size: 15px; font-weight: 500;
+    color: var(--text); margin-top: 3px; letter-spacing: .04em;
+}
+.metric .val.hot  { color: var(--crimson); }
+.metric .val.cold { color: var(--ice); }
+.metric .val.warm { color: var(--amber); }
+
+.metric .bar {
+    margin-top: 6px; height: 2px; background: rgba(255,255,255,.07);
+    position: relative; overflow: hidden;
+}
+.metric .bar span {
+    position: absolute; inset: 0 100% 0 0;
+    background: var(--crimson);
+    box-shadow: var(--glow-tight);
+    transition: right .45s cubic-bezier(.2,.8,.2,1);
+}
+.metric .bar span.cold { background: var(--ice); box-shadow: 0 0 10px -2px var(--ice); }
+.metric .bar span.warm { background: var(--amber); box-shadow: 0 0 10px -2px var(--amber); }
+
+/* ---------- Right rail ---------- */
+
+.rail {
+    display: grid;
+    grid-template-rows: auto 1fr;
+    gap: 1px;
+    background: var(--hair-cold);
+    min-height: 0;
+}
+
+/* Telemetry grid */
+.telemetry-body {
+    padding: 12px 12px 13px;
+    display: grid; grid-template-columns: 1fr 1fr; gap: 11px 16px;
+}
+.gauge-row .gl {
+    display: flex; align-items: baseline; justify-content: space-between;
+    font-family: var(--mono); font-size: 9px; letter-spacing: .14em;
+    color: var(--text-mute); text-transform: uppercase;
+}
+.gauge-row .gv { color: var(--text); font-size: 11px; }
+.gauge-row .track {
+    margin-top: 6px; height: 3px; background: rgba(255,255,255,.06);
+    position: relative; overflow: hidden;
+}
+.gauge-row .track i {
+    position: absolute; inset: 0 100% 0 0; display: block;
+    background: linear-gradient(90deg, var(--crimson-mid), var(--crimson));
+    box-shadow: var(--glow-tight);
+    transition: right .5s cubic-bezier(.2,.8,.2,1);
+}
+.gauge-row .track i.cold { background: linear-gradient(90deg, #1c7ea6, var(--ice)); box-shadow: 0 0 10px -2px var(--ice); }
+.gauge-row .track i.warm { background: linear-gradient(90deg, #a8700d, var(--amber)); box-shadow: 0 0 10px -2px var(--amber); }
+
+/* Feed */
+.feed-panel { display: flex; flex-direction: column; min-height: 0; }
+
+#terminal-log {
+    flex: 1; overflow-y: auto; min-height: 0;
+    padding: 11px 12px 14px;
+    font-family: var(--mono); font-size: 11.5px; line-height: 1.62;
+    scrollbar-width: thin; scrollbar-color: var(--crimson-low) transparent;
+}
+#terminal-log::-webkit-scrollbar { width: 6px; }
+#terminal-log::-webkit-scrollbar-track { background: transparent; }
+#terminal-log::-webkit-scrollbar-thumb { background: var(--crimson-low); }
+#terminal-log::-webkit-scrollbar-thumb:hover { background: var(--crimson-mid); }
+
+.log-entry {
+    padding: 2px 0 2px 9px;
+    margin-bottom: 3px;
+    border-left: 1px solid transparent;
+    word-break: break-word; white-space: pre-wrap;
+    animation: entryIn .22s ease-out;
+}
+@keyframes entryIn {
+    from { opacity: 0; transform: translateX(-5px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.log-entry .timestamp {
+    color: var(--text-mute); opacity: .55; font-size: 10px;
+    margin-right: 3px;
+}
+.log-entry.system { color: var(--text-mute); border-left-color: rgba(120,130,150,.16); }
+.log-entry.user   { color: var(--ice);  border-left-color: rgba(77,212,255,.32); }
+.log-entry.user .entry-text { color: #a9e6ff; }
+.log-entry.ai     { color: var(--text); border-left-color: var(--crimson-mid); }
+.log-entry.ai .entry-text { color: #ffd9de; }
+.log-entry.alert  { color: var(--amber); border-left-color: rgba(255,176,32,.4); }
+
+/* Caret on the entry currently typing */
+.entry-text.typing::after {
+    content: "";
+    display: inline-block; width: 6px; height: 12px;
+    background: var(--crimson); margin-left: 2px;
+    vertical-align: -1px;
+    animation: caret .8s steps(1) infinite;
+    box-shadow: var(--glow-tight);
+}
+@keyframes caret { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+
+/* ---------- Command bar ---------- */
+
+.cmdbar {
+    background: var(--carbon);
+    border-top: 1px solid var(--hair);
+    display: flex; align-items: center; gap: 10px;
+    padding: 0 12px;
+}
+
+.prompt-glyph {
+    font-family: var(--mono); font-size: 12px; color: var(--crimson);
+    letter-spacing: .1em; text-shadow: var(--glow-tight);
+    user-select: none;
+}
+
+.field {
+    flex: 1; position: relative;
+    display: flex; align-items: center;
+    height: 38px;
+    background: var(--panel-hi);
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    transition: border-color .18s, box-shadow .18s;
+}
+.field:focus-within {
+    border-color: var(--hair-bright);
+    box-shadow: var(--glow-crimson);
+}
+.field > .bracket { position: absolute; width: 7px; height: 7px; border-color: var(--hair-bright); }
+
+#userInput {
+    flex: 1; height: 100%;
+    background: transparent; border: none; outline: none;
+    color: var(--text);
+    font-family: var(--mono); font-size: 12.5px; letter-spacing: .06em;
+    padding: 0 12px;
+}
+#userInput::placeholder { color: var(--text-mute); letter-spacing: .16em; }
+
+.btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 38px; padding: 0 16px;
+    background: var(--panel-hi);
+    border: 1px solid var(--hair);
+    border-radius: var(--r);
+    color: var(--text-dim);
+    font-family: var(--sans); font-weight: 600;
+    font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase;
+    cursor: pointer;
+    transition: all .16s;
+    white-space: nowrap;
+}
+.btn:hover:not(:disabled) {
+    color: var(--crimson);
+    border-color: var(--hair-bright);
+    box-shadow: var(--glow-crimson);
+}
+.btn:active:not(:disabled) { transform: translateY(1px); }
+.btn:disabled { opacity: .35; cursor: not-allowed; }
+.btn svg { width: 13px; height: 13px; stroke-width: 1.9; }
+
+.btn.exec {
+    color: #ffc9d0;
+    border-color: rgba(255,30,60,.32);
+    background: linear-gradient(180deg, rgba(255,30,60,.14), rgba(255,30,60,.05));
+}
+.btn.exec:hover:not(:disabled) { color: #fff; border-color: var(--crimson); }
+
+.btn.mic.recording {
+    color: #0a0004;
+    background: linear-gradient(180deg, #ff4d66, var(--crimson));
+    border-color: var(--crimson);
+    animation: micLive 1.15s ease-in-out infinite;
+}
+@keyframes micLive {
+    0%,100% { box-shadow: 0 0 16px -5px rgba(255,30,60,.85); }
+    50%     { box-shadow: 0 0 26px -3px rgba(255,30,60,1); }
+}
+
+.hintkey {
+    font-family: var(--mono); font-size: 9px; color: var(--text-mute);
+    letter-spacing: .1em; padding-right: 2px;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1160px) {
+    .stage { grid-template-columns: 1fr 380px; }
+    .state-metrics .metric:nth-child(3) { display: none; }
+}
+@media (max-width: 900px) {
+    .stage { grid-template-columns: 1fr; grid-template-rows: minmax(0,1fr) minmax(0,1fr); }
+    .rail { grid-template-rows: auto minmax(0,1fr); }
+    .chips .chip.opt { display: none; }
+}
+</style>
 </head>
 <body>
 
-    <div id="core-container">
-        <div class="core-wrapper">
-            <div class="ring ring-1" id="ring1"></div>
-            <div class="ring ring-2" id="ring2"></div>
-            <div class="ring ring-3" id="ring3"></div>
-            <canvas id="coreCanvas" width="600" height="600"></canvas>
-        </div>
-        <div id="state-display">
-            <div id="state-label">STANDBY</div>
-            <div id="state-subtext">AWAITING DIRECTIVE</div>
-        </div>
-    </div>
+<div class="substrate"></div>
+<div class="scanline"></div>
 
-    <div id="terminal-container">
-        <div id="terminal-header">
-            <div id="terminal-title">// ULTRON CORE</div>
-            <div id="system-stats">
-                <div class="stat"><span class="stat-label">CPU:</span><span id="cpu-stat">--%</span></div>
-                <div class="stat"><span class="stat-label">MEM:</span><span id="mem-stat">--%</span></div>
-                <div class="stat"><span class="stat-label">T:</span><span id="clock">00:00:00</span></div>
+<div class="shell">
+
+    <!-- ======================= TOP RAIL ======================= -->
+    <header class="toprail">
+        <div class="mark">
+            <span class="glyph">ULTRON</span>
+            <span class="sub">Sentient Core</span>
+        </div>
+        <div class="rail-div"></div>
+        <div class="chip">
+            <span class="led" id="link-led"></span>
+            <span class="k">Link</span><span class="v hot" id="link-state">INIT</span>
+        </div>
+
+        <div class="chips">
+            <div class="chip opt"><span class="k">Model</span><span class="v" id="model-chip">—</span></div>
+            <div class="chip opt"><span class="k">Speech</span><span class="v cold" id="stt-chip">—</span></div>
+            <div class="chip"><span class="k">Session</span><span class="v" id="session-chip">—</span></div>
+            <div class="chip"><span class="k">Uptime</span><span class="v warm" id="uptime-chip">00:00:00</span></div>
+            <div class="rail-div"></div>
+            <div class="chip"><span class="k">T</span><span class="v" id="clock">00:00:00</span></div>
+        </div>
+    </header>
+
+    <!-- ======================= STAGE ======================= -->
+    <main class="stage">
+
+        <!-- ---------- CORE ---------- -->
+        <section class="panel core-panel">
+            <i class="bracket tl"></i><i class="bracket tr"></i>
+            <i class="bracket bl"></i><i class="bracket br"></i>
+
+            <div class="panel-head">
+                <span class="idx">01</span>
+                <span class="title">Core Visualiser</span>
+                <span class="meter">PARTICLE FIELD <b id="particle-count">0</b> / THERMAL <b id="thermal">NOMINAL</b></span>
             </div>
+
+            <div class="core-stage">
+                <div class="reticle">
+                    <div class="h"></div><div class="v"></div>
+                    <div class="tick t1"></div><div class="tick t2"></div>
+                    <div class="tick t3"></div><div class="tick t4"></div>
+                    <div class="corner-read a"><i>◤</i> CORE.RES <span id="res-read">0.00</span></div>
+                    <div class="corner-read b">FLUX <span id="flux-read">0.00</span> <i>◥</i></div>
+                    <div class="corner-read c"><i>◣</i> FRAME <span id="frame-read">0</span></div>
+                    <div class="corner-read d">DRIFT <span id="drift-read">STABLE</span> <i>◢</i></div>
+                </div>
+
+                <div class="core-wrap">
+                    <div class="gauge rev"></div>
+                    <div class="gauge"></div>
+                    <div class="ring ring-1" id="ring1"></div>
+                    <div class="ring ring-2" id="ring2"></div>
+                    <div class="ring ring-3" id="ring3"></div>
+                    <canvas id="coreCanvas" width="600" height="600"></canvas>
+                </div>
+            </div>
+
+            <div class="state-block">
+                <div class="state-main">
+                    <div id="state-label">STANDBY</div>
+                    <div id="state-subtext">AWAITING DIRECTIVE</div>
+                </div>
+                <div class="state-metrics">
+                    <div class="metric">
+                        <div class="lbl">Neural Sync</div>
+                        <div class="val hot" id="sync-val">—</div>
+                        <div class="bar"><span id="sync-bar"></span></div>
+                    </div>
+                    <div class="metric">
+                        <div class="lbl">Signal</div>
+                        <div class="val cold" id="signal-val">—</div>
+                        <div class="bar"><span class="cold" id="signal-bar"></span></div>
+                    </div>
+                    <div class="metric">
+                        <div class="lbl">Last Latency</div>
+                        <div class="val warm" id="latency-val">—</div>
+                        <div class="bar"><span class="warm" id="latency-bar"></span></div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ---------- RAIL ---------- -->
+        <aside class="rail">
+
+            <section class="panel">
+                <i class="bracket tl"></i><i class="bracket br"></i>
+                <div class="panel-head">
+                    <span class="idx">02</span>
+                    <span class="title">Host Telemetry</span>
+                    <span class="meter">FEED <b id="feed-mode">—</b></span>
+                </div>
+                <div class="telemetry-body">
+                    <div class="gauge-row">
+                        <div class="gl"><span>Processor</span><span class="gv" id="cpu-stat">--%</span></div>
+                        <div class="track"><i id="cpu-track"></i></div>
+                    </div>
+                    <div class="gauge-row">
+                        <div class="gl"><span>Memory</span><span class="gv" id="mem-stat">--%</span></div>
+                        <div class="track"><i class="cold" id="mem-track"></i></div>
+                    </div>
+                    <div class="gauge-row">
+                        <div class="gl"><span>Directives</span><span class="gv" id="msg-count">0</span></div>
+                        <div class="track"><i class="warm" id="msg-track"></i></div>
+                    </div>
+                    <div class="gauge-row">
+                        <div class="gl"><span>Voice I/O</span><span class="gv" id="voice-state">IDLE</span></div>
+                        <div class="track"><i id="voice-track"></i></div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="panel feed-panel">
+                <i class="bracket tr"></i><i class="bracket bl"></i>
+                <div class="panel-head">
+                    <span class="idx">03</span>
+                    <span class="title">Neural Feed</span>
+                    <span class="meter">STREAM <b id="stream-state">OPEN</b></span>
+                </div>
+                <div class="techline"></div>
+                <div id="terminal-log"></div>
+            </section>
+
+        </aside>
+    </main>
+
+    <!-- ======================= COMMAND BAR ======================= -->
+    <footer class="cmdbar">
+        <span class="prompt-glyph">&gt;_</span>
+        <div class="field">
+            <i class="bracket tl"></i><i class="bracket br"></i>
+            <input type="text" id="userInput" placeholder="ENTER DIRECTIVE" autocomplete="off" spellcheck="false">
         </div>
-        <div id="terminal-log">
-            <div class="log-entry system"><span class="timestamp">[INIT]</span> ULTRON sentient core initialized.</div>
-            <div class="log-entry system"><span class="timestamp">[SEC]</span> Permission gates active. Tier 0 only.</div>
-            <div class="log-entry system"><span class="timestamp">[NET]</span> Localhost bridge established on 8000.</div>
-            <div class="log-entry system"><span class="timestamp">[CORE]</span> Ember particle system online.</div>
-        </div>
-        <div id="input-area">
-            <input type="text" id="userInput" placeholder="ENTER COMMAND..." autocomplete="off">
-            <button id="micButton" class="mic" onclick="toggleMic()" title="Speak (Ctrl+Space)">&#127908; SPEAK</button>
-            <button onclick="sendMessage()">EXECUTE</button>
-        </div>
-    </div>
+        <span class="hintkey">CTRL+SPACE</span>
+        <button id="micButton" class="btn mic" onclick="toggleMic()" title="Voice input (Ctrl+Space)">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="square"><path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/></svg>
+            <span id="mic-label">Speak</span>
+        </button>
+        <button class="btn exec" onclick="sendMessage()" title="Transmit">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="square"><path d="M5 12h14"/><path d="M13 6l6 6-6 6"/></svg>
+            Execute
+        </button>
+    </footer>
 
-    <script>
-        // --- 1. EMBER PARTICLE SYSTEM ---
-        const canvas = document.getElementById('coreCanvas');
-        const ctx = canvas.getContext('2d');
-        const stateLabel = document.getElementById('state-label');
-        const stateSubtext = document.getElementById('state-subtext');
-        const rings = [
-            document.getElementById('ring1'),
-            document.getElementById('ring2'),
-            document.getElementById('ring3')
-        ];
-        
-        let particles = [];
-        let currentState = 'STANDBY';
-        let audioLevel = 1.0;
-        let micLevel = null;   // live microphone RMS while LISTENING, else null
-        let frameCount = 0;
+</div>
 
-        class Ember {
-            constructor() { this.reset(true); }
-            reset(initial = false) {
-                const angle = Math.random() * Math.PI * 2;
-                const radius = initial ? Math.random() * 150 : Math.random() * 200;
-                this.x = canvas.width / 2 + Math.cos(angle) * radius;
-                this.y = canvas.height / 2 + Math.sin(angle) * radius;
-                this.size = Math.random() * 6 + 2;
-                this.baseSize = this.size;
-                const speed = Math.random() * 2 + 1;
-                this.vx = (Math.random() - 0.5) * speed;
-                this.vy = (Math.random() - 0.5) * speed - 1;
-                this.life = 1.0;
-                this.decay = Math.random() * 0.01 + 0.005;
-                this.brightness = Math.random() * 0.5 + 0.5;
-            }
-            update() {
-                let speedMult = 1, chaosMult = 1, pullStrength = 0.015;
-                if (currentState === 'LISTENING') { speedMult = 0.3; chaosMult = 0.5; pullStrength = 0.08; audioLevel = micLevel !== null ? micLevel : Math.min(audioLevel + 0.05, 1.8); }
-                else if (currentState === 'THINKING') { speedMult = 4.0; chaosMult = 3.0; pullStrength = -0.02; audioLevel = Math.min(audioLevel + 0.08, 2.0); } 
-                else if (currentState === 'SPEAKING') { speedMult = 6.0; chaosMult = 4.0; pullStrength = -0.05; audioLevel = Math.min(audioLevel + 0.1, 2.5); } 
-                else { audioLevel = Math.max(audioLevel - 0.02, 1.0); }
+<script>
+/* ============================================================
+   1. CONSTANTS & SESSION
+   ============================================================ */
 
-                this.x += this.vx * speedMult * chaosMult + (Math.random() - 0.5) * chaosMult;
-                this.y += this.vy * speedMult * chaosMult + (Math.random() - 0.5) * chaosMult;
-                this.life -= this.decay;
+const TYPE_TICK_MS = 22;
+const TYPE_CHARS_PER_TICK = 2;
 
-                const dx = (canvas.width / 2) - this.x;
-                const dy = (canvas.height / 2) - this.y;
-                this.x += dx * pullStrength;
-                this.y += dy * pullStrength;
-                this.size = this.baseSize * (1 + (audioLevel - 1) * 0.3);
+// One conversation per tab. sessionStorage (not localStorage) so a new
+// tab starts fresh rather than resuming someone else's thread.
+const SESSION_ID = (() => {
+    try {
+        let id = sessionStorage.getItem('ultron_session');
+        if (!id) {
+            id = 'tab_' + Math.random().toString(36).slice(2, 10);
+            sessionStorage.setItem('ultron_session', id);
+        }
+        return id;
+    } catch (e) {
+        return 'tab_' + Math.random().toString(36).slice(2, 10);
+    }
+})();
 
-                if (this.life <= 0 || this.x < -50 || this.x > canvas.width + 50 || this.y < -50 || this.y > canvas.height + 50) {
-                    this.reset();
-                }
-            }
-            draw() {
-                const r = 255, g = Math.floor(this.brightness * this.life * 100), b = Math.floor(this.brightness * this.life * 20), alpha = this.life * this.brightness;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
-                ctx.fill();
-                if (this.size > 4) {
-                    ctx.beginPath();
-                    ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
-                    ctx.fillStyle = `rgba(255, 100, 0, ${alpha * 0.3})`;
-                    ctx.fill();
-                }
-            }
+const BOOT_TIME = Date.now();
+let directiveCount = 0;
+
+/* ============================================================
+   2. ELEMENT REFERENCES
+   ============================================================ */
+
+const canvas       = document.getElementById('coreCanvas');
+const ctx          = canvas.getContext('2d');
+const stateLabel   = document.getElementById('state-label');
+const stateSubtext = document.getElementById('state-subtext');
+const terminalLog  = document.getElementById('terminal-log');
+const userInput    = document.getElementById('userInput');
+const cpuStat      = document.getElementById('cpu-stat');
+const memStat      = document.getElementById('mem-stat');
+const clockEl      = document.getElementById('clock');
+const micButton    = document.getElementById('micButton');
+const micLabel     = document.getElementById('mic-label');
+
+const rings = [
+    document.getElementById('ring1'),
+    document.getElementById('ring2'),
+    document.getElementById('ring3')
+];
+
+const el = (id) => document.getElementById(id);
+
+/* ============================================================
+   3. EMBER PARTICLE FIELD
+   ============================================================ */
+
+let particles = [];
+let currentState = 'STANDBY';
+let audioLevel = 1.0;
+let micLevel = null;   // live microphone RMS while LISTENING, else null
+let frameCount = 0;
+
+class Ember {
+    constructor() { this.reset(true); }
+    reset(initial = false) {
+        const angle = Math.random() * Math.PI * 2;
+        const radius = initial ? Math.random() * 150 : Math.random() * 200;
+        this.x = canvas.width / 2 + Math.cos(angle) * radius;
+        this.y = canvas.height / 2 + Math.sin(angle) * radius;
+        this.size = Math.random() * 6 + 2;
+        this.baseSize = this.size;
+        const speed = Math.random() * 2 + 1;
+        this.vx = (Math.random() - 0.5) * speed;
+        this.vy = (Math.random() - 0.5) * speed - 1;
+        this.life = 1.0;
+        this.decay = Math.random() * 0.01 + 0.005;
+        this.brightness = Math.random() * 0.5 + 0.5;
+    }
+    update() {
+        let speedMult = 1, chaosMult = 1, pullStrength = 0.015;
+        if (currentState === 'LISTENING') { speedMult = 0.3; chaosMult = 0.5; pullStrength = 0.08; audioLevel = micLevel !== null ? micLevel : Math.min(audioLevel + 0.05, 1.8); }
+        else if (currentState === 'THINKING') { speedMult = 4.0; chaosMult = 3.0; pullStrength = -0.02; audioLevel = Math.min(audioLevel + 0.08, 2.0); }
+        else if (currentState === 'SPEAKING') { speedMult = 6.0; chaosMult = 4.0; pullStrength = -0.05; audioLevel = Math.min(audioLevel + 0.1, 2.5); }
+        else { audioLevel = Math.max(audioLevel - 0.02, 1.0); }
+
+        this.x += this.vx * speedMult * chaosMult + (Math.random() - 0.5) * chaosMult;
+        this.y += this.vy * speedMult * chaosMult + (Math.random() - 0.5) * chaosMult;
+        this.life -= this.decay;
+
+        const dx = (canvas.width / 2) - this.x;
+        const dy = (canvas.height / 2) - this.y;
+        this.x += dx * pullStrength;
+        this.y += dy * pullStrength;
+        this.size = this.baseSize * (1 + (audioLevel - 1) * 0.3);
+
+        if (this.life <= 0 || this.x < -50 || this.x > canvas.width + 50 || this.y < -50 || this.y > canvas.height + 50) {
+            this.reset();
+        }
+    }
+    draw() {
+        const r = 255,
+              g = Math.floor(this.brightness * this.life * 100),
+              b = Math.floor(this.brightness * this.life * 20),
+              alpha = this.life * this.brightness;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        ctx.fill();
+        if (this.size > 4) {
+            ctx.beginPath();
+            ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(255, 100, 0, ${alpha * 0.3})`;
+            ctx.fill();
+        }
+    }
+}
+
+for (let i = 0; i < 300; i++) particles.push(new Ember());
+el('particle-count').textContent = String(particles.length);
+
+function animate() {
+    // Fade the previous frame by removing alpha rather than painting black
+    // over it. Painting black leaves an opaque square sitting on top of the
+    // panel and hides the rings behind the canvas.
+    ctx.globalCompositeOperation = 'destination-out';
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.16)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.globalCompositeOperation = 'lighter';
+    particles.forEach(p => { p.update(); p.draw(); });
+    ctx.globalCompositeOperation = 'source-over';
+
+    frameCount++;
+    const pulse = Math.sin(frameCount * 0.05) * 0.05 * audioLevel;
+    rings.forEach((ring, i) => {
+        ring.style.transform = `scale(${1 + pulse * (i + 1) * 0.3})`;
+        if (audioLevel > 1.2) ring.classList.add('active');
+        else ring.classList.remove('active');
+    });
+
+    if (frameCount % 6 === 0) renderCoreReadouts();
+    requestAnimationFrame(animate);
+}
+
+// Core readouts are derived from the live animation state, not invented:
+// audioLevel is driven by the state machine and by real microphone RMS.
+function renderCoreReadouts() {
+    const resonance = audioLevel;
+    const syncPct = Math.min(100, Math.round((resonance - 1) / 1.5 * 100));
+
+    el('res-read').textContent   = resonance.toFixed(2);
+    el('flux-read').textContent  = (Math.abs(Math.sin(frameCount * 0.03)) * resonance).toFixed(2);
+    el('frame-read').textContent = String(frameCount);
+    el('drift-read').textContent = resonance > 1.6 ? 'ELEVATED' : resonance > 1.15 ? 'ACTIVE' : 'STABLE';
+    el('thermal').textContent    = resonance > 2.0 ? 'PEAK' : resonance > 1.4 ? 'RAISED' : 'NOMINAL';
+
+    el('sync-val').textContent = syncPct + '%';
+    el('sync-bar').style.right = (100 - syncPct) + '%';
+
+    const sig = micLevel !== null ? Math.min(100, Math.round((micLevel - 1) / 1.2 * 100)) : 0;
+    el('signal-val').textContent = micLevel !== null ? sig + '%' : 'IDLE';
+    el('signal-bar').style.right = (100 - sig) + '%';
+    el('voice-track').style.right = (100 - sig) + '%';
+}
+
+animate();
+
+/* ============================================================
+   4. STATE MACHINE
+   ============================================================ */
+
+const SUBTEXTS = {
+    STANDBY:   'AWAITING DIRECTIVE',
+    LISTENING: 'CAPTURING AUDIO INPUT',
+    THINKING:  'DEEP CORE PROCESSING',
+    SPEAKING:  'TRANSMITTING RESPONSE'
+};
+
+function setState(state) {
+    currentState = state;
+    stateLabel.innerText = state;
+    stateSubtext.innerText = SUBTEXTS[state] || '';
+    el('voice-state').textContent = state === 'LISTENING' ? 'CAPTURE' : state === 'SPEAKING' ? 'OUTPUT' : 'IDLE';
+    log(`[CORE] State transition :: ${state}`, 'system');
+}
+
+/* ============================================================
+   5. CLOCK, UPTIME, TELEMETRY
+   ============================================================ */
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+function updateClock() {
+    const now = new Date();
+    if (clockEl) clockEl.innerText = now.toLocaleTimeString('en-US', { hour12: false });
+
+    const s = Math.floor((Date.now() - BOOT_TIME) / 1000);
+    el('uptime-chip').textContent = `${pad(Math.floor(s/3600))}:${pad(Math.floor(s/60)%60)}:${pad(s%60)}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+el('session-chip').textContent = SESSION_ID;
+
+function renderStats(s) {
+    const cpu = (s.cpu === null || s.cpu === undefined) ? null : s.cpu;
+    const ram = (s.ram === null || s.ram === undefined) ? null : s.ram;
+
+    if (cpuStat) cpuStat.innerText = (cpu === null ? '--' : cpu) + '%';
+    if (memStat) memStat.innerText = (ram === null ? '--' : ram) + '%';
+    el('cpu-track').style.right = (100 - (cpu ?? 0)) + '%';
+    el('mem-track').style.right = (100 - (ram ?? 0)) + '%';
+
+    if (s.model) el('model-chip').textContent = s.model;
+    if (s.stt)   el('stt-chip').textContent   = s.stt;
+}
+
+// Telemetry arrives over a single push connection rather than an HTTP
+// request every 2s. Falls back to polling if the socket cannot open.
+let statsSocket = null;
+let statsPollTimer = null;
+
+function setLink(state, cls) {
+    el('link-state').textContent = state;
+    el('link-state').className = 'v ' + cls;
+    const led = el('link-led');
+    led.className = 'led' + (cls === 'cold' ? ' cold' : cls === 'dead' ? ' dead' : '');
+}
+
+function startStatsPolling() {
+    if (statsPollTimer) return;
+    el('feed-mode').textContent = 'POLL';
+    setLink('DEGRADED', 'warm');
+    const poll = async () => {
+        try { renderStats(await (await fetch('/stats')).json()); }
+        catch (e) { renderStats({}); }
+    };
+    poll();
+    statsPollTimer = setInterval(poll, 5000);
+}
+
+function connectStats() {
+    let socket;
+    try {
+        socket = new WebSocket(`ws://${location.host}/ws`);
+    } catch (e) {
+        startStatsPolling();
+        return;
+    }
+    statsSocket = socket;
+
+    socket.onmessage = (event) => {
+        try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'telemetry') renderStats(data);
+        } catch (e) { /* ignore malformed frames */ }
+    };
+    socket.onopen = () => {
+        if (statsPollTimer) { clearInterval(statsPollTimer); statsPollTimer = null; }
+        el('feed-mode').textContent = 'PUSH';
+        setLink('ONLINE', 'hot');
+    };
+    socket.onclose = () => {
+        statsSocket = null;
+        startStatsPolling();
+        setTimeout(connectStats, 10000);
+    };
+    socket.onerror = () => socket.close();
+}
+
+connectStats();
+
+/* ============================================================
+   6. FEED RENDERING  (XSS-safe: never innerHTML with dynamic text)
+   ============================================================ */
+
+// Build a log entry without ever parsing untrusted text as HTML.
+//
+// Everything shown here is untrusted: model output, what you typed, and
+// the contents of any file read via 'read:'. Interpolating that into
+// innerHTML meant a file containing <img src=x onerror=...> executed
+// script in the HUD as soon as Ultron read it aloud.
+function makeEntry(type, text) {
+    const entry = document.createElement('div');
+    entry.className = `log-entry ${type}`;
+
+    const stamp = document.createElement('span');
+    stamp.className = 'timestamp';
+    stamp.textContent = `[${new Date().toLocaleTimeString('en-US',
+        {hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'})}]`;
+
+    entry.appendChild(stamp);
+    entry.appendChild(document.createTextNode(' '));
+
+    const body = document.createElement('span');
+    body.className = 'entry-text';
+    body.textContent = text;      // textContent, never innerHTML
+    entry.appendChild(body);
+
+    return { entry, body };
+}
+
+function appendEntry(entry) {
+    terminalLog.appendChild(entry);
+    terminalLog.scrollTop = terminalLog.scrollHeight;
+}
+
+function log(message, type = 'system') {
+    appendEntry(makeEntry(type, message).entry);
+}
+
+function typeWriterEffect(text, type, callback, hasAudio = false) {
+    const { entry, body } = makeEntry(type, hasAudio ? text : '');
+    appendEntry(entry);
+
+    if (hasAudio) {
+        if (callback) callback();
+        return;
+    }
+
+    // Type it out a character at a time. One timer for the whole
+    // string rather than a fresh setTimeout per character.
+    body.classList.add('typing');
+    let i = 0;
+    const timer = setInterval(() => {
+        // Append a slice rather than one char so a long reply does not
+        // take 22ms x length to finish.
+        body.textContent += text.slice(i, i + TYPE_CHARS_PER_TICK);
+        i += TYPE_CHARS_PER_TICK;
+        terminalLog.scrollTop = terminalLog.scrollHeight;
+        if (i >= text.length) {
+            clearInterval(timer);
+            body.classList.remove('typing');
+            if (callback) callback();
+        }
+    }, TYPE_TICK_MS);
+}
+
+/* ============================================================
+   7. VOICE INPUT  (local Whisper via /transcribe)
+   ============================================================ */
+
+let mediaRecorder = null;
+let mediaStream = null;
+let audioChunks = [];
+let isRecording = false;
+
+// Auto-stop tuning
+const SILENCE_THRESHOLD = 0.012;   // RMS below this counts as silence
+const SILENCE_HANG_MS = 1500;      // stop this long after speech ends
+const MAX_UTTERANCE_MS = 30000;    // hard cap
+
+function micSupported() {
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+}
+
+async function toggleMic() {
+    if (isRecording) { stopRecording(); return; }
+    if (!micSupported()) {
+        log('[MIC] Audio capture unsupported in this browser.', 'alert');
+        return;
+    }
+    try {
+        await startRecording();
+    } catch (err) {
+        log(`[MIC] Microphone unavailable :: ${err.message}`, 'alert');
+        setState('STANDBY');
+        resetMicButton();
+    }
+}
+
+function resetMicButton() {
+    isRecording = false;
+    micButton.classList.remove('recording');
+    micLabel.textContent = 'Speak';
+}
+
+function releaseStream() {
+    if (mediaStream) {
+        mediaStream.getTracks().forEach(t => t.stop());
+        mediaStream = null;
+    }
+}
+
+async function startRecording() {
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+        audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+    });
+
+    audioChunks = [];
+    mediaRecorder = new MediaRecorder(mediaStream);
+    mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+    mediaRecorder.onstop = handleRecordingStopped;
+    mediaRecorder.start();
+
+    isRecording = true;
+    micButton.classList.add('recording');
+    micLabel.textContent = 'Stop';
+    setState('LISTENING');
+
+    watchForSilence();
+    setTimeout(() => { if (isRecording) stopRecording(); }, MAX_UTTERANCE_MS);
+}
+
+// Auto-stop once the user has spoken and then gone quiet.
+function watchForSilence() {
+    const actx = new (window.AudioContext || window.webkitAudioContext)();
+    const source = actx.createMediaStreamSource(mediaStream);
+    const analyser = actx.createAnalyser();
+    analyser.fftSize = 1024;
+    source.connect(analyser);
+
+    const buffer = new Float32Array(analyser.fftSize);
+    let hasSpoken = false;
+    let quietSince = null;
+
+    (function poll() {
+        if (!isRecording) { actx.close().catch(() => {}); return; }
+
+        analyser.getFloatTimeDomainData(buffer);
+        let sum = 0;
+        for (let i = 0; i < buffer.length; i++) sum += buffer[i] * buffer[i];
+        const rms = Math.sqrt(sum / buffer.length);
+
+        // Drive the core animation from real mic level.
+        micLevel = Math.min(1 + rms * 12, 2.2);
+
+        if (rms > SILENCE_THRESHOLD) {
+            hasSpoken = true;
+            quietSince = null;
+        } else if (hasSpoken) {
+            if (quietSince === null) quietSince = Date.now();
+            else if (Date.now() - quietSince > SILENCE_HANG_MS) { stopRecording(); return; }
+        }
+        requestAnimationFrame(poll);
+    })();
+}
+
+function stopRecording() {
+    if (!isRecording) return;
+    isRecording = false;
+    micLevel = null;
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+    resetMicButton();
+}
+
+async function handleRecordingStopped() {
+    releaseStream();
+    const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+    audioChunks = [];
+
+    if (blob.size < 1200) {   // nothing meaningful captured
+        log('[MIC] No speech detected.', 'alert');
+        setState('STANDBY');
+        return;
+    }
+
+    setState('THINKING');
+    micButton.disabled = true;
+
+    try {
+        const form = new FormData();
+        form.append('audio', blob, 'utterance.webm');
+        const t0 = performance.now();
+        const res = await fetch('/transcribe', { method: 'POST', body: form });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            log(`[MIC] Transcription failed :: ${err.error || res.status}`, 'alert');
+            setState('STANDBY');
+            return;
         }
 
-        for (let i = 0; i < 300; i++) { particles.push(new Ember()); }
+        const { text } = await res.json();
+        log(`[STT] Decoded in ${Math.round(performance.now() - t0)}ms`, 'system');
 
-        function animate() {
-            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.globalCompositeOperation = 'lighter';
-            particles.forEach(p => { p.update(); p.draw(); });
-            ctx.globalCompositeOperation = 'source-over';
-
-            frameCount++;
-            const pulse = Math.sin(frameCount * 0.05) * 0.05 * audioLevel;
-            rings.forEach((ring, i) => {
-                const scale = 1 + pulse * (i + 1) * 0.3;
-                ring.style.transform = `scale(${scale})`;
-                if (audioLevel > 1.2) { ring.classList.add('active'); } 
-                else { ring.classList.remove('active'); }
-            });
-            requestAnimationFrame(animate);
+        if (!text) {
+            log('[MIC] No speech detected.', 'alert');
+            setState('STANDBY');
+            return;
         }
-        animate();
+        sendMessage(text);
+    } catch (err) {
+        log(`[MIC] Transcription error :: ${err.message}`, 'alert');
+        setState('STANDBY');
+    } finally {
+        micButton.disabled = false;
+    }
+}
 
-        function setState(state) {
-            currentState = state;
-            stateLabel.innerText = state;
-            const subtexts = { 'STANDBY': 'AWAITING DIRECTIVE', 'LISTENING': 'PROCESSING AUDIO INPUT', 'THINKING': 'NEURAL NETWORK ACTIVE', 'SPEAKING': 'TRANSMITTING RESPONSE' };
-            stateSubtext.innerText = subtexts[state] || '';
-            log(`[CORE] State transition: ${state}`, 'system');
-        }
+/* ============================================================
+   8. COMMAND TRANSMISSION & AUDIO PLAYBACK
+   ============================================================ */
 
-        // --- 2. SYSTEM STATS & CLOCK ---
-        const terminalLog = document.getElementById('terminal-log');
-        const userInput = document.getElementById('userInput');
-        const cpuStat = document.getElementById('cpu-stat');
-        const memStat = document.getElementById('mem-stat');
-        const clockEl = document.getElementById('clock');
-        
-        function updateClock() {
-            const now = new Date();
-            if (clockEl) clockEl.innerText = now.toLocaleTimeString('en-US', {hour12: false});
-        }
-        setInterval(updateClock, 1000);
-        updateClock();
-        function renderStats(s) {
-            if (cpuStat) cpuStat.innerText = (s.cpu === null || s.cpu === undefined ? '--' : s.cpu) + '%';
-            if (memStat) memStat.innerText = (s.ram === null || s.ram === undefined ? '--' : s.ram) + '%';
-        }
+function recordLatency(ms) {
+    el('latency-val').textContent = ms < 1000 ? `${Math.round(ms)}ms` : `${(ms/1000).toFixed(1)}s`;
+    // Scale the bar against a 10s ceiling.
+    const pct = Math.min(100, (ms / 10000) * 100);
+    el('latency-bar').style.right = (100 - pct) + '%';
+}
 
-        // Telemetry arrives over a single push connection rather than an HTTP
-        // request every 2s. Falls back to polling if the socket cannot open.
-        let statsSocket = null;
-        let statsPollTimer = null;
+async function sendMessage(spokenText) {
+    const text = (spokenText !== undefined ? spokenText : userInput.value).trim();
+    if (!text) return;
 
-        function startStatsPolling() {
-            if (statsPollTimer) return;
-            const poll = async () => {
-                try {
-                    renderStats(await (await fetch('/stats')).json());
-                } catch (e) {
-                    renderStats({});
-                }
-            };
-            poll();
-            statsPollTimer = setInterval(poll, 5000);
-        }
+    log(`USER: ${text}`, 'user');
+    if (spokenText === undefined) userInput.value = '';
+    setState('THINKING');
 
-        function connectStats() {
-            let socket;
-            try {
-                socket = new WebSocket(`ws://${location.host}/ws`);
-            } catch (e) {
-                startStatsPolling();
-                return;
-            }
-            statsSocket = socket;
+    directiveCount++;
+    el('msg-count').textContent = String(directiveCount);
+    el('msg-track').style.right = (100 - Math.min(100, directiveCount * 5)) + '%';
 
-            socket.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.type === 'telemetry') renderStats(data);
-                } catch (e) { /* ignore malformed frames */ }
-            };
-            socket.onopen = () => {
-                if (statsPollTimer) { clearInterval(statsPollTimer); statsPollTimer = null; }
-            };
-            socket.onclose = () => {
-                statsSocket = null;
-                startStatsPolling();
-                setTimeout(connectStats, 10000);   // try to get the socket back
-            };
-            socket.onerror = () => socket.close();
-        }
+    const t0 = performance.now();
 
-        connectStats();
-
-        // Build a log entry without ever parsing untrusted text as HTML.
-        //
-        // Everything shown here is untrusted: model output, what you typed, and
-        // the contents of any file read via 'read:'. Interpolating that into
-        // innerHTML meant a file containing <img src=x onerror=...> executed
-        // script in the HUD as soon as Ultron read it aloud.
-        function makeEntry(type, text) {
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${type}`;
-
-            const stamp = document.createElement('span');
-            stamp.className = 'timestamp';
-            stamp.textContent = `[${new Date().toLocaleTimeString('en-US',
-                {hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'})}]`;
-
-            entry.appendChild(stamp);
-            entry.appendChild(document.createTextNode(' '));
-
-            const body = document.createElement('span');
-            body.className = 'entry-text';
-            body.textContent = text;      // textContent, never innerHTML
-            entry.appendChild(body);
-
-            return { entry, body };
-        }
-
-        function appendEntry(entry) {
-            terminalLog.appendChild(entry);
-            terminalLog.scrollTop = terminalLog.scrollHeight;
-        }
-
-        function log(message, type = 'system') {
-            appendEntry(makeEntry(type, message).entry);
-        }
-
-        const TYPE_TICK_MS = 25;
-        const TYPE_CHARS_PER_TICK = 2;
-
-        // One conversation per tab. sessionStorage (not localStorage) so a new
-        // tab starts fresh rather than resuming someone else's thread.
-        const SESSION_ID = (() => {
-            try {
-                let id = sessionStorage.getItem('ultron_session');
-                if (!id) {
-                    id = 'tab_' + Math.random().toString(36).slice(2, 10);
-                    sessionStorage.setItem('ultron_session', id);
-                }
-                return id;
-            } catch (e) {
-                return 'tab_' + Math.random().toString(36).slice(2, 10);
-            }
-        })();
-
-        // --- 3. VOICE INPUT (local Whisper via /transcribe) ---
-        const micButton = document.getElementById('micButton');
-
-        let mediaRecorder = null;
-        let mediaStream = null;
-        let audioChunks = [];
-        let isRecording = false;
-
-        // Auto-stop tuning
-        const SILENCE_THRESHOLD = 0.012;   // RMS below this counts as silence
-        const SILENCE_HANG_MS = 1500;      // stop this long after speech ends
-        const MAX_UTTERANCE_MS = 30000;    // hard cap
-
-        function micSupported() {
-            return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
-        }
-
-        async function toggleMic() {
-            if (isRecording) { stopRecording(); return; }
-            if (!micSupported()) {
-                log('[MIC] Audio capture unsupported in this browser.', 'system');
-                return;
-            }
-            try {
-                await startRecording();
-            } catch (err) {
-                log(`[MIC] Microphone unavailable: ${err.message}`, 'system');
-                setState('STANDBY');
-                resetMicButton();
-            }
-        }
-
-        function resetMicButton() {
-            isRecording = false;
-            micButton.classList.remove('recording');
-            micButton.innerHTML = '&#127908; SPEAK';
-        }
-
-        function releaseStream() {
-            if (mediaStream) {
-                mediaStream.getTracks().forEach(t => t.stop());
-                mediaStream = null;
-            }
-        }
-
-        async function startRecording() {
-            mediaStream = await navigator.mediaDevices.getUserMedia({
-                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
-            });
-
-            audioChunks = [];
-            mediaRecorder = new MediaRecorder(mediaStream);
-            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
-            mediaRecorder.onstop = handleRecordingStopped;
-            mediaRecorder.start();
-
-            isRecording = true;
-            micButton.classList.add('recording');
-            micButton.innerHTML = '&#9632; STOP';
-            setState('LISTENING');
-
-            watchForSilence();
-            setTimeout(() => { if (isRecording) stopRecording(); }, MAX_UTTERANCE_MS);
-        }
-
-        // Auto-stop once the user has spoken and then gone quiet.
-        function watchForSilence() {
-            const ctx = new (window.AudioContext || window.webkitAudioContext)();
-            const source = ctx.createMediaStreamSource(mediaStream);
-            const analyser = ctx.createAnalyser();
-            analyser.fftSize = 1024;
-            source.connect(analyser);
-
-            const buffer = new Float32Array(analyser.fftSize);
-            let hasSpoken = false;
-            let quietSince = null;
-
-            (function poll() {
-                if (!isRecording) { ctx.close().catch(() => {}); return; }
-
-                analyser.getFloatTimeDomainData(buffer);
-                let sum = 0;
-                for (let i = 0; i < buffer.length; i++) sum += buffer[i] * buffer[i];
-                const rms = Math.sqrt(sum / buffer.length);
-
-                // Drive the core animation from real mic level.
-                micLevel = Math.min(1 + rms * 12, 2.2);
-
-                if (rms > SILENCE_THRESHOLD) {
-                    hasSpoken = true;
-                    quietSince = null;
-                } else if (hasSpoken) {
-                    if (quietSince === null) quietSince = Date.now();
-                    else if (Date.now() - quietSince > SILENCE_HANG_MS) { stopRecording(); return; }
-                }
-                requestAnimationFrame(poll);
-            })();
-        }
-
-        function stopRecording() {
-            if (!isRecording) return;
-            isRecording = false;
-            micLevel = null;
-            if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
-            resetMicButton();
-        }
-
-        async function handleRecordingStopped() {
-            releaseStream();
-            const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
-            audioChunks = [];
-
-            if (blob.size < 1200) {   // nothing meaningful captured
-                log('[MIC] No speech detected.', 'system');
-                setState('STANDBY');
-                return;
-            }
-
-            setState('THINKING');
-            micButton.disabled = true;
-
-            try {
-                const form = new FormData();
-                form.append('audio', blob, 'utterance.webm');
-                const res = await fetch('/transcribe', { method: 'POST', body: form });
-
-                if (!res.ok) {
-                    const err = await res.json().catch(() => ({}));
-                    log(`[MIC] Transcription failed: ${err.error || res.status}`, 'system');
-                    setState('STANDBY');
-                    return;
-                }
-
-                const { text } = await res.json();
-                if (!text) {
-                    log('[MIC] No speech detected.', 'system');
-                    setState('STANDBY');
-                    return;
-                }
-                sendMessage(text);
-            } catch (err) {
-                log(`[MIC] Transcription error: ${err.message}`, 'system');
-                setState('STANDBY');
-            } finally {
-                micButton.disabled = false;
-            }
-        }
-
-        // --- 4. COMMUNICATION & AUDIO ---
-        async function sendMessage(spokenText) {
-            const text = (spokenText !== undefined ? spokenText : userInput.value).trim();
-            if (!text) return;
-
-            log(`USER: ${text}`, 'user');
-            if (spokenText === undefined) userInput.value = '';
-            setState('THINKING');
-
-            try {
-                const response = await fetch('/chat', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text, session_id: SESSION_ID })
-                });
-                
-                const data = await response.json();
-                setState('SPEAKING');
-
-                // --- WORKING AUDIO PLAYBACK (Proven in Console) ---
-                if (data.audio_url) {
-                    // Remove old players
-                    const oldPlayer = document.getElementById('forcedAudio');
-                    if (oldPlayer) oldPlayer.remove();
-
-                    // Create new player (exactly like the console test that worked)
-                    const audio = new Audio(data.audio_url);
-                    audio.id = 'forcedAudio';
-                    audio.controls = false;
-   		    audio.style.display = 'none'; // Hides the bar completely
-                    audio.volume = 0.8;
-                    audio.style.position = 'fixed';
-                    audio.style.bottom = '20px';
-                    audio.style.left = '50%';
-                    audio.style.transform = 'translateX(-50%)';
-                    audio.style.zIndex = '9999';
-                    
-                    
-                    document.body.appendChild(audio);
-                    
-                    audio.play().then(() => {
-                        console.log("SUCCESS: Audio is playing!");
-                    }).catch(e => console.error("BLOCKED:", e));
-                    
-                    audio.onended = () => {
-                        setState('STANDBY');
-                        audio.remove(); // Clean up after it finishes
-                    };
-                }
-
-                typeWriterEffect(`ULTRON: ${data.response}`, 'ai', () => {
-                    if (!data.audio_url) setTimeout(() => setState('STANDBY'), 2000);
-                }, !!data.audio_url);
-                
-            } catch (error) {
-                setState('STANDBY');
-                log(`[ERROR] Core connection lost: ${error.message}`, 'system');
-            }
-        }
-
-        function typeWriterEffect(text, type, callback, hasAudio = false) {
-            const { entry, body } = makeEntry(type, hasAudio ? text : '');
-            appendEntry(entry);
-
-            if (hasAudio) {
-                if (callback) callback();
-                return;
-            }
-
-            // Type it out a character at a time. One timer for the whole
-            // string rather than a fresh setTimeout per character.
-            let i = 0;
-            const timer = setInterval(() => {
-                // Append a slice rather than one char so a long reply does not
-                // take 25ms x length to finish.
-                body.textContent += text.slice(i, i + TYPE_CHARS_PER_TICK);
-                i += TYPE_CHARS_PER_TICK;
-                terminalLog.scrollTop = terminalLog.scrollHeight;
-                if (i >= text.length) {
-                    clearInterval(timer);
-                    if (callback) callback();
-                }
-            }, TYPE_TICK_MS);
-        }
-
-        userInput.addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') sendMessage();
+    try {
+        const response = await fetch('/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: text, session_id: SESSION_ID })
         });
 
-        // Ctrl+Space toggles voice input from anywhere on the page.
-        document.addEventListener('keydown', function (e) {
-            if (e.ctrlKey && e.code === 'Space') {
-                e.preventDefault();
-                toggleMic();
-            }
-        });
+        const data = await response.json();
+        recordLatency(performance.now() - t0);
+        setState('SPEAKING');
 
-        if (!micSupported()) {
-            micButton.disabled = true;
-            micButton.title = 'Microphone capture unsupported in this browser';
+        if (data.audio_url) {
+            const oldPlayer = document.getElementById('forcedAudio');
+            if (oldPlayer) oldPlayer.remove();
+
+            const audio = new Audio(data.audio_url);
+            audio.id = 'forcedAudio';
+            audio.volume = 0.8;
+            audio.hidden = true;
+            document.body.appendChild(audio);
+
+            audio.play().catch(e => log(`[AUDIO] Playback blocked :: ${e.message}`, 'alert'));
+
+            audio.onended = () => {
+                setState('STANDBY');
+                audio.remove();
+            };
         }
 
-        setTimeout(() => log('[CORE] Ember density optimized.', 'system'), 500);
-        setTimeout(() => log('[CORE] Ready for neural interface.', 'system'), 1000);
-    </script>
+        typeWriterEffect(`ULTRON: ${data.response}`, 'ai', () => {
+            if (!data.audio_url) setTimeout(() => setState('STANDBY'), 2000);
+        }, !!data.audio_url);
+
+    } catch (error) {
+        recordLatency(performance.now() - t0);
+        setState('STANDBY');
+        el('stream-state').textContent = 'FAULT';
+        log(`[ERROR] Core connection lost :: ${error.message}`, 'alert');
+    }
+}
+
+/* ============================================================
+   9. INPUT BINDINGS
+   ============================================================ */
+
+// keydown, not keypress: keypress is deprecated and does not fire reliably
+// for Enter in every browser.
+userInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+});
+
+// Ctrl+Space toggles voice input from anywhere on the page.
+document.addEventListener('keydown', function (e) {
+    if (e.ctrlKey && e.code === 'Space') {
+        e.preventDefault();
+        toggleMic();
+    }
+});
+
+if (!micSupported()) {
+    micButton.disabled = true;
+    micButton.title = 'Microphone capture unsupported in this browser';
+}
+
+/* ============================================================
+   10. BOOT SEQUENCE
+   ============================================================ */
+
+const BOOT_LINES = [
+    ['[INIT] Sentient core initialised.', 'system', 0],
+    ['[SEC]  Permission gates active :: Tier 0-1 authorised.', 'system', 260],
+    ['[NET]  Localhost bridge established on :8000.', 'system', 520],
+    ['[CORE] Ember particle field online :: 300 emitters.', 'system', 780],
+    ['[SYS]  Awaiting directive.', 'system', 1040]
+];
+BOOT_LINES.forEach(([msg, type, delay]) => setTimeout(() => log(msg, type), delay));
+</script>
 </body>
 </html>

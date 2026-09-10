@@ -125,10 +125,29 @@ async def read_root():
     return HTMLResponse((STATIC_DIR / "index.html").read_text(encoding="utf-8"))
 
 
+def _telemetry() -> dict:
+    """
+    Live host and stack state for the HUD. The model names are reported from
+    the running configuration rather than hardcoded in the page, so the
+    readout cannot drift from what is actually loaded.
+    """
+    if transcriber.model_name:
+        stt = f"{transcriber.model_name}/{transcriber.device}"
+    else:
+        stt = f"{settings.STT_MODEL_CPU}/pending" if settings.STT_DEVICE == "cpu" else "pending"
+
+    return {
+        "cpu": read_cpu_percent(),
+        "ram": read_ram_percent(),
+        "model": settings.OLLAMA_MODEL,
+        "stt": stt,
+    }
+
+
 @app.get("/stats")
 async def stats():
     """Real host telemetry for the HUD readouts."""
-    return {"cpu": read_cpu_percent(), "ram": read_ram_percent()}
+    return _telemetry()
 
 
 @app.post("/transcribe")
@@ -176,11 +195,7 @@ async def websocket_endpoint(websocket: WebSocket):
     await websocket.accept()
     try:
         while True:
-            await websocket.send_json({
-                "type": "telemetry",
-                "cpu": read_cpu_percent(),
-                "ram": read_ram_percent(),
-            })
+            await websocket.send_json({"type": "telemetry", **_telemetry()})
             await asyncio.sleep(settings.TELEMETRY_INTERVAL)
     except WebSocketDisconnect:
         pass
