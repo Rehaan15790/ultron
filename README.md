@@ -51,7 +51,7 @@ everything else still works.
 You also need [Ollama](https://ollama.com) running locally with the model pulled:
 
 ```bash
-ollama pull llama3.2
+ollama pull qwen2.5:14b
 ```
 
 ## Running
@@ -138,18 +138,25 @@ by your real microphone level while listening.
 Audio is captured by the browser, POSTed to `/transcribe`, and transcribed by
 faster-whisper **on this machine**. Nothing is sent to a speech cloud service.
 
-Device selection is automatic: GPU first (`distil-large-v3`, float16), falling
-back to CPU (`base.en`, int8) if CUDA is unavailable. Override in `.env`:
+This build runs speech on the CPU (`small.en`, ~0.7s) so the GPU belongs
+entirely to the reasoning model — see the VRAM budget below. Override in
+`.env`:
 
 ```
 STT_DEVICE=cpu          # auto | cuda | cpu
-STT_MODEL_GPU=large-v3
+STT_MODEL_GPU=distil-large-v3
 STT_MODEL_CPU=small.en
 ```
 
-The model downloads from HuggingFace on first use (~1.5GB for distil-large-v3)
-and is cached in `~/.cache/huggingface`. It is warmed in a background thread at
-server startup so the first utterance is not charged the load time.
+Models download from HuggingFace on first use and cache in
+`~/.cache/huggingface`. Only `small.en` (464MB) is currently on disk; setting
+`STT_DEVICE` to `cuda` or `auto` re-downloads the GPU model (~1.4GB)
+automatically. The model is warmed in a background thread at server startup so
+the first utterance is not charged the load time.
+
+On CPU, `base.en` is faster but mishears "I am Ultron" as "IAM Ultron", and
+`distil-small.en` hears "Altron". `small.en` is the smallest one that gets it
+right.
 
 ### VRAM budget
 
