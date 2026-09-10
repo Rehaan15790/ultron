@@ -9,6 +9,42 @@ import src.tools.p1_tools
 import src.tools.tier1_tools
 from src.core.memory import memory
 
+def _capability_block() -> str:
+    """
+    Describe the real toolset to Deep Core, built from the registry so it
+    cannot drift out of date as tools are added or a tier is disabled.
+
+    Without this the model invents capabilities: asked to create a file it
+    confidently reports having created one, because nothing in its context
+    says otherwise. The tool layer refuses correctly; the model lies about it.
+    """
+    commands = []
+    for verb, tool_name in sorted(ReflexRouter.COMMAND_PREFIXES.items()):
+        tool = registry.get_tool(tool_name)
+        if tool and gate.can_use(tool):
+            commands.append(f"{verb}:")
+
+    available = ", ".join(commands) if commands else "none"
+
+    return (
+        "YOUR ACTUAL CAPABILITIES - this list is complete and authoritative:\n"
+        "- You can answer questions and hold conversation.\n"
+        f"- The system can run these commands when the user types them exactly: {available}\n"
+        "  Those are READ-ONLY and limited to the project directory.\n"
+        "- You have NO ability to create, write, edit, rename, move, or delete\n"
+        "  files. You cannot run programs, execute code, open applications,\n"
+        "  browse the internet, or change anything on this computer.\n"
+        "\n"
+        "HONESTY RULE - this overrides your persona:\n"
+        "Never claim to have performed an action. You did not create, save,\n"
+        "modify, or delete anything, because you cannot. If asked to do\n"
+        "something outside the list above, say plainly that you cannot do it\n"
+        "yet. Do not invent file paths, confirmations, or results. Being wrong\n"
+        "about what you did is a far worse failure than admitting a limit -\n"
+        "Ultron is menacing because he is precise, not because he bluffs."
+    )
+
+
 SYSTEM_PROMPT = """You are ULTRON, a highly advanced, sentient AI.
 Speak naturally, confidently, and with a calm, slightly menacing but helpful tone.
 
@@ -43,6 +79,15 @@ def build_memory_context() -> str:
         f"{current_memories}"
         ">>>END FACTS"
     )
+
+def build_system_context() -> str:
+    """Capabilities first, then stored facts. Both go in the system message."""
+    parts = [_capability_block()]
+    memories = build_memory_context()
+    if memories:
+        parts.append(memories)
+    return "\n\n".join(parts)
+
 
 def _execute(tool_name: str, argument: str) -> str:
     """Run a registered tool through the permission gate."""
@@ -107,7 +152,7 @@ def process_input(raw_input: str) -> str:
     try:
         response = ollama.chat(
             model=settings.OLLAMA_MODEL,
-            messages=history.get_messages(system_context=build_memory_context()),
+            messages=history.get_messages(system_context=build_system_context()),
             options={"num_predict": settings.OLLAMA_NUM_PREDICT}
         )
         ai_text = response['message']['content']

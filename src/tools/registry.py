@@ -20,12 +20,17 @@ class ToolRegistry:
 
 class PermissionGate:
     @staticmethod
-    def check(tool: Tool) -> bool:
-        # P1 Policy: Only allow tools in the ALLOWED_TIERS list (Tier 0)
-        if tool.tier not in settings.ALLOWED_TIERS:
+    def can_use(tool: Tool) -> bool:
+        """Policy check with no side effects, for introspection and prompts."""
+        return tool.tier in settings.ALLOWED_TIERS
+
+    @classmethod
+    def check(cls, tool: Tool) -> bool:
+        """Policy check for an actual invocation. Audited."""
+        if not cls.can_use(tool):
             audit.log_event("tool.denied", {"tool": tool.name, "tier": tool.tier, "reason": "tier_not_allowed"})
             return False
-        
+
         audit.log_event("tool.allowed", {"tool": tool.name, "tier": tool.tier})
         return True
 
