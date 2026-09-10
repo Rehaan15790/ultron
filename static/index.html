@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ULTRON // SENTIENT CORE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --crimson: #ff003c;
+            --dark-crimson: #8a0020;
+            --ember: #ff6600;
+            --bright-ember: #ffaa00;
+            --black: #000000;
+            --deep-red: #1a0000;
+            --glow-strong: 0 0 20px rgba(255, 0, 60, 0.8), 0 0 40px rgba(255, 0, 60, 0.5), 0 0 60px rgba(255, 0, 60, 0.3);
+            --text-glow: 0 0 10px rgba(255, 0, 60, 1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            margin: 0;
+            background: radial-gradient(ellipse at center, #1a0000 0%, #000000 100%);
+            color: var(--crimson);
+            font-family: 'Share Tech Mono', monospace;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+        body::before {
+            content: "";
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background-image: 
+                linear-gradient(rgba(255, 0, 60, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 0, 60, 0.03) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: gridMove 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        @keyframes gridMove {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(50px, 50px); }
+        }
+
+        #core-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            z-index: 1;
+        }
+        .core-wrapper {
+            position: relative;
+            width: 600px;
+            height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .ring {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid var(--dark-crimson);
+            box-shadow: var(--glow-strong), inset 0 0 30px rgba(255, 0, 60, 0.3);
+            transition: all 0.15s ease-out;
+        }
+        .ring-1 { width: 500px; height: 500px; border-width: 3px; }
+        .ring-2 { width: 420px; height: 420px; border-width: 2px; opacity: 0.7; }
+        .ring-3 { width: 340px; height: 340px; border-width: 1px; opacity: 0.4; }
+        
+        .ring.active {
+            border-color: var(--crimson);
+            box-shadow: 0 0 40px var(--crimson), inset 0 0 50px var(--crimson);
+            animation: ringPulse 0.5s ease-out;
+        }
+        @keyframes ringPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        canvas {
+            position: absolute;
+            z-index: 10;
+            filter: drop-shadow(0 0 20px rgba(255, 100, 0, 0.6));
+        }
+        
+        #state-display {
+            margin-top: 40px;
+            text-align: center;
+        }
+        #state-label {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: 12px;
+            text-transform: uppercase;
+            color: var(--crimson);
+            text-shadow: var(--text-glow), 0 0 20px rgba(255, 0, 60, 0.8);
+            animation: statePulse 1.5s ease-in-out infinite;
+        }
+        @keyframes statePulse {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.02); }
+        }
+        #state-subtext {
+            font-size: 0.9rem;
+            letter-spacing: 4px;
+            color: var(--ember);
+            margin-top: 10px;
+            opacity: 0.7;
+        }
+
+        #terminal-container {
+            width: 500px;
+            background: linear-gradient(180deg, rgba(26,0,0,0.9) 0%, rgba(0,0,0,0.95) 100%);
+            border-left: 3px solid var(--crimson);
+            display: flex;
+            flex-direction: column;
+            padding: 25px;
+            box-shadow: -15px 0 40px rgba(255, 0, 60, 0.2);
+            z-index: 5;
+            position: relative;
+        }
+        #terminal-header {
+            border-bottom: 2px solid var(--crimson);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        #terminal-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: var(--crimson);
+            text-shadow: var(--text-glow);
+        }
+        #system-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+        }
+        .stat { color: var(--ember); }
+        .stat-label { color: #666; margin-right: 5px; }
+        
+        #terminal-log {
+            flex: 1;
+            overflow-y: auto;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 1px solid var(--dark-crimson);
+            box-shadow: inset 0 0 20px rgba(255, 0, 60, 0.1);
+        }
+        .log-entry { 
+            margin-bottom: 12px; 
+            padding: 8px;
+            border-left: 3px solid transparent;
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-10px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        .log-entry.system { 
+            color: #ff6666; 
+            border-left-color: var(--crimson);
+            background: rgba(255, 0, 60, 0.05);
+        }
+        .log-entry.user { 
+            color: #ffffff; 
+            border-left-color: #666;
+            background: rgba(255, 255, 255, 0.03);
+        }
+        .log-entry.ai { 
+            color: var(--crimson); 
+            border-left-color: var(--ember);
+            background: rgba(255, 100, 0, 0.05);
+            text-shadow: var(--text-glow);
+            font-weight: 500;
+        }
+        .log-entry .timestamp { 
+            color: #880000; 
+            font-size: 0.8rem; 
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        #input-area {
+            display: flex;
+            gap: 15px;
+            border-top: 2px solid var(--dark-crimson);
+            padding-top: 20px;
+        }
+        input[type="text"] {
+            flex: 1;
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid var(--dark-crimson);
+            color: var(--crimson);
+            padding: 15px;
+            font-family: 'Share Tech Mono', monospace;
+            font-size: 1.1rem;
+            outline: none;
+            transition: all 0.3s;
+            letter-spacing: 2px;
+        }
+        input[type="text"]:focus {
+            border-color: var(--crimson);
+            box-shadow: 0 0 20px rgba(255, 0, 60, 0.4), inset 0 0 10px rgba(255, 0, 60, 0.1);
+            background: rgba(26, 0, 0, 0.7);
+        }
+        button {
+            background: linear-gradient(180deg, var(--crimson) 0%, var(--dark-crimson) 100%);
+            color: white;
+            border: 2px solid var(--crimson);
+            padding: 15px 35px;
+            cursor: pointer;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            transition: all 0.2s;
+            box-shadow: 0 0 15px rgba(255, 0, 60, 0.4);
+        }
+        button:hover {
+            background: linear-gradient(180deg, #ff3333 0%, var(--crimson) 100%);
+            box-shadow: 0 0 30px rgba(255, 0, 60, 0.8);
+            transform: translateY(-2px);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        button.mic {
+            padding: 15px 22px;
+            letter-spacing: 1px;
+        }
+        button.mic.recording {
+            background: linear-gradient(180deg, #fff 0%, var(--crimson) 100%);
+            color: #1a0000;
+            animation: micPulse 1s ease-in-out infinite;
+        }
+        button.mic:disabled {
+            opacity: 0.45;
+            cursor: not-allowed;
+            animation: none;
+        }
+        @keyframes micPulse {
+            0%, 100% { box-shadow: 0 0 15px rgba(255, 0, 60, 0.5); }
+            50%      { box-shadow: 0 0 35px rgba(255, 0, 60, 1); }
+        }
+        
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { 
+            background: var(--dark-crimson); 
+            border: 1px solid var(--crimson);
+        }
+    </style>
+</head>
+<body>
+
+    <div id="core-container">
+        <div class="core-wrapper">
+            <div class="ring ring-1" id="ring1"></div>
+            <div class="ring ring-2" id="ring2"></div>
+            <div class="ring ring-3" id="ring3"></div>
+            <canvas id="coreCanvas" width="600" height="600"></canvas>
+        </div>
+        <div id="state-display">
+            <div id="state-label">STANDBY</div>
+            <div id="state-subtext">AWAITING DIRECTIVE</div>
+        </div>
+    </div>
+
+    <div id="terminal-container">
+        <div id="terminal-header">
+            <div id="terminal-title">// ULTRON CORE</div>
+            <div id="system-stats">
+                <div class="stat"><span class="stat-label">CPU:</span><span id="cpu-stat">--%</span></div>
+                <div class="stat"><span class="stat-label">MEM:</span><span id="mem-stat">--%</span></div>
+                <div class="stat"><span class="stat-label">T:</span><span id="clock">00:00:00</span></div>
+            </div>
+        </div>
+        <div id="terminal-log">
+            <div class="log-entry system"><span class="timestamp">[INIT]</span> ULTRON sentient core initialized.</div>
+            <div class="log-entry system"><span class="timestamp">[SEC]</span> Permission gates active. Tier 0 only.</div>
+            <div class="log-entry system"><span class="timestamp">[NET]</span> Localhost bridge established on 8000.</div>
+            <div class="log-entry system"><span class="timestamp">[CORE]</span> Ember particle system online.</div>
+        </div>
+        <div id="input-area">
+            <input type="text" id="userInput" placeholder="ENTER COMMAND..." autocomplete="off">
+            <button id="micButton" class="mic" onclick="toggleMic()" title="Speak (Ctrl+Space)">&#127908; SPEAK</button>
+            <button onclick="sendMessage()">EXECUTE</button>
+        </div>
+    </div>
+
+    <script>
+        // --- 1. EMBER PARTICLE SYSTEM ---
+        const canvas = document.getElementById('coreCanvas');
+        const ctx = canvas.getContext('2d');
+        const stateLabel = document.getElementById('state-label');
+        const stateSubtext = document.getElementById('state-subtext');
+        const rings = [
+            document.getElementById('ring1'),
+            document.getElementById('ring2'),
+            document.getElementById('ring3')
+        ];
+        
+        let particles = [];
+        let currentState = 'STANDBY';
+        let audioLevel = 1.0;
+        let micLevel = null;   // live microphone RMS while LISTENING, else null
+        let frameCount = 0;
+
+        class Ember {
+            constructor() { this.reset(true); }
+            reset(initial = false) {
+                const angle = Math.random() * Math.PI * 2;
+                const radius = initial ? Math.random() * 150 : Math.random() * 200;
+                this.x = canvas.width / 2 + Math.cos(angle) * radius;
+                this.y = canvas.height / 2 + Math.sin(angle) * radius;
+                this.size = Math.random() * 6 + 2;
+                this.baseSize = this.size;
+                const speed = Math.random() * 2 + 1;
+                this.vx = (Math.random() - 0.5) * speed;
+                this.vy = (Math.random() - 0.5) * speed - 1;
+                this.life = 1.0;
+                this.decay = Math.random() * 0.01 + 0.005;
+                this.brightness = Math.random() * 0.5 + 0.5;
+            }
+            update() {
+                let speedMult = 1, chaosMult = 1, pullStrength = 0.015;
+                if (currentState === 'LISTENING') { speedMult = 0.3; chaosMult = 0.5; pullStrength = 0.08; audioLevel = micLevel !== null ? micLevel : Math.min(audioLevel + 0.05, 1.8); }
+                else if (currentState === 'THINKING') { speedMult = 4.0; chaosMult = 3.0; pullStrength = -0.02; audioLevel = Math.min(audioLevel + 0.08, 2.0); } 
+                else if (currentState === 'SPEAKING') { speedMult = 6.0; chaosMult = 4.0; pullStrength = -0.05; audioLevel = Math.min(audioLevel + 0.1, 2.5); } 
+                else { audioLevel = Math.max(audioLevel - 0.02, 1.0); }
+
+                this.x += this.vx * speedMult * chaosMult + (Math.random() - 0.5) * chaosMult;
+                this.y += this.vy * speedMult * chaosMult + (Math.random() - 0.5) * chaosMult;
+                this.life -= this.decay;
+
+                const dx = (canvas.width / 2) - this.x;
+                const dy = (canvas.height / 2) - this.y;
+                this.x += dx * pullStrength;
+                this.y += dy * pullStrength;
+                this.size = this.baseSize * (1 + (audioLevel - 1) * 0.3);
+
+                if (this.life <= 0 || this.x < -50 || this.x > canvas.width + 50 || this.y < -50 || this.y > canvas.height + 50) {
+                    this.reset();
+                }
+            }
+            draw() {
+                const r = 255, g = Math.floor(this.brightness * this.life * 100), b = Math.floor(this.brightness * this.life * 20), alpha = this.life * this.brightness;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                ctx.fill();
+                if (this.size > 4) {
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255, 100, 0, ${alpha * 0.3})`;
+                    ctx.fill();
+                }
+            }
+        }
+
+        for (let i = 0; i < 300; i++) { particles.push(new Ember()); }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.globalCompositeOperation = 'lighter';
+            particles.forEach(p => { p.update(); p.draw(); });
+            ctx.globalCompositeOperation = 'source-over';
+
+            frameCount++;
+            const pulse = Math.sin(frameCount * 0.05) * 0.05 * audioLevel;
+            rings.forEach((ring, i) => {
+                const scale = 1 + pulse * (i + 1) * 0.3;
+                ring.style.transform = `scale(${scale})`;
+                if (audioLevel > 1.2) { ring.classList.add('active'); } 
+                else { ring.classList.remove('active'); }
+            });
+            requestAnimationFrame(animate);
+        }
+        animate();
+
+        function setState(state) {
+            currentState = state;
+            stateLabel.innerText = state;
+            const subtexts = { 'STANDBY': 'AWAITING DIRECTIVE', 'LISTENING': 'PROCESSING AUDIO INPUT', 'THINKING': 'NEURAL NETWORK ACTIVE', 'SPEAKING': 'TRANSMITTING RESPONSE' };
+            stateSubtext.innerText = subtexts[state] || '';
+            log(`[CORE] State transition: ${state}`, 'system');
+        }
+
+        // --- 2. SYSTEM STATS & CLOCK ---
+        const terminalLog = document.getElementById('terminal-log');
+        const userInput = document.getElementById('userInput');
+        const cpuStat = document.getElementById('cpu-stat');
+        const memStat = document.getElementById('mem-stat');
+        const clockEl = document.getElementById('clock');
+        
+        function updateClock() {
+            const now = new Date();
+            if (clockEl) clockEl.innerText = now.toLocaleTimeString('en-US', {hour12: false});
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+        async function updateStats() {
+            try {
+                const res = await fetch('/stats');
+                const s = await res.json();
+                if (cpuStat) cpuStat.innerText = (s.cpu === null ? '--' : s.cpu) + '%';
+                if (memStat) memStat.innerText = (s.ram === null ? '--' : s.ram) + '%';
+            } catch (e) {
+                if (cpuStat) cpuStat.innerText = '--%';
+                if (memStat) memStat.innerText = '--%';
+            }
+        }
+        setInterval(updateStats, 2000);
+        updateStats();
+
+        function log(message, type = 'system') {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+            entry.innerHTML = `<span class="timestamp">[${time}]</span> ${message}`;
+            terminalLog.appendChild(entry);
+            terminalLog.scrollTop = terminalLog.scrollHeight;
+        }
+
+        // --- 3. VOICE INPUT (local Whisper via /transcribe) ---
+        const micButton = document.getElementById('micButton');
+
+        let mediaRecorder = null;
+        let mediaStream = null;
+        let audioChunks = [];
+        let isRecording = false;
+
+        // Auto-stop tuning
+        const SILENCE_THRESHOLD = 0.012;   // RMS below this counts as silence
+        const SILENCE_HANG_MS = 1500;      // stop this long after speech ends
+        const MAX_UTTERANCE_MS = 30000;    // hard cap
+
+        function micSupported() {
+            return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+        }
+
+        async function toggleMic() {
+            if (isRecording) { stopRecording(); return; }
+            if (!micSupported()) {
+                log('[MIC] Audio capture unsupported in this browser.', 'system');
+                return;
+            }
+            try {
+                await startRecording();
+            } catch (err) {
+                log(`[MIC] Microphone unavailable: ${err.message}`, 'system');
+                setState('STANDBY');
+                resetMicButton();
+            }
+        }
+
+        function resetMicButton() {
+            isRecording = false;
+            micButton.classList.remove('recording');
+            micButton.innerHTML = '&#127908; SPEAK';
+        }
+
+        function releaseStream() {
+            if (mediaStream) {
+                mediaStream.getTracks().forEach(t => t.stop());
+                mediaStream = null;
+            }
+        }
+
+        async function startRecording() {
+            mediaStream = await navigator.mediaDevices.getUserMedia({
+                audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+            });
+
+            audioChunks = [];
+            mediaRecorder = new MediaRecorder(mediaStream);
+            mediaRecorder.ondataavailable = e => { if (e.data.size > 0) audioChunks.push(e.data); };
+            mediaRecorder.onstop = handleRecordingStopped;
+            mediaRecorder.start();
+
+            isRecording = true;
+            micButton.classList.add('recording');
+            micButton.innerHTML = '&#9632; STOP';
+            setState('LISTENING');
+
+            watchForSilence();
+            setTimeout(() => { if (isRecording) stopRecording(); }, MAX_UTTERANCE_MS);
+        }
+
+        // Auto-stop once the user has spoken and then gone quiet.
+        function watchForSilence() {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const source = ctx.createMediaStreamSource(mediaStream);
+            const analyser = ctx.createAnalyser();
+            analyser.fftSize = 1024;
+            source.connect(analyser);
+
+            const buffer = new Float32Array(analyser.fftSize);
+            let hasSpoken = false;
+            let quietSince = null;
+
+            (function poll() {
+                if (!isRecording) { ctx.close().catch(() => {}); return; }
+
+                analyser.getFloatTimeDomainData(buffer);
+                let sum = 0;
+                for (let i = 0; i < buffer.length; i++) sum += buffer[i] * buffer[i];
+                const rms = Math.sqrt(sum / buffer.length);
+
+                // Drive the core animation from real mic level.
+                micLevel = Math.min(1 + rms * 12, 2.2);
+
+                if (rms > SILENCE_THRESHOLD) {
+                    hasSpoken = true;
+                    quietSince = null;
+                } else if (hasSpoken) {
+                    if (quietSince === null) quietSince = Date.now();
+                    else if (Date.now() - quietSince > SILENCE_HANG_MS) { stopRecording(); return; }
+                }
+                requestAnimationFrame(poll);
+            })();
+        }
+
+        function stopRecording() {
+            if (!isRecording) return;
+            isRecording = false;
+            micLevel = null;
+            if (mediaRecorder && mediaRecorder.state !== 'inactive') mediaRecorder.stop();
+            resetMicButton();
+        }
+
+        async function handleRecordingStopped() {
+            releaseStream();
+            const blob = new Blob(audioChunks, { type: mediaRecorder.mimeType || 'audio/webm' });
+            audioChunks = [];
+
+            if (blob.size < 1200) {   // nothing meaningful captured
+                log('[MIC] No speech detected.', 'system');
+                setState('STANDBY');
+                return;
+            }
+
+            setState('THINKING');
+            micButton.disabled = true;
+
+            try {
+                const form = new FormData();
+                form.append('audio', blob, 'utterance.webm');
+                const res = await fetch('/transcribe', { method: 'POST', body: form });
+
+                if (!res.ok) {
+                    const err = await res.json().catch(() => ({}));
+                    log(`[MIC] Transcription failed: ${err.error || res.status}`, 'system');
+                    setState('STANDBY');
+                    return;
+                }
+
+                const { text } = await res.json();
+                if (!text) {
+                    log('[MIC] No speech detected.', 'system');
+                    setState('STANDBY');
+                    return;
+                }
+                sendMessage(text);
+            } catch (err) {
+                log(`[MIC] Transcription error: ${err.message}`, 'system');
+                setState('STANDBY');
+            } finally {
+                micButton.disabled = false;
+            }
+        }
+
+        // --- 4. COMMUNICATION & AUDIO ---
+        async function sendMessage(spokenText) {
+            const text = (spokenText !== undefined ? spokenText : userInput.value).trim();
+            if (!text) return;
+
+            log(`USER: ${text}`, 'user');
+            if (spokenText === undefined) userInput.value = '';
+            setState('THINKING');
+
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ text: text })
+                });
+                
+                const data = await response.json();
+                setState('SPEAKING');
+
+                // --- WORKING AUDIO PLAYBACK (Proven in Console) ---
+                if (data.audio_url) {
+                    // Remove old players
+                    const oldPlayer = document.getElementById('forcedAudio');
+                    if (oldPlayer) oldPlayer.remove();
+
+                    // Create new player (exactly like the console test that worked)
+                    const audio = new Audio(data.audio_url);
+                    audio.id = 'forcedAudio';
+                    audio.controls = false;
+   		    audio.style.display = 'none'; // Hides the bar completely
+                    audio.volume = 0.8;
+                    audio.style.position = 'fixed';
+                    audio.style.bottom = '20px';
+                    audio.style.left = '50%';
+                    audio.style.transform = 'translateX(-50%)';
+                    audio.style.zIndex = '9999';
+                    
+                    
+                    document.body.appendChild(audio);
+                    
+                    audio.play().then(() => {
+                        console.log("SUCCESS: Audio is playing!");
+                    }).catch(e => console.error("BLOCKED:", e));
+                    
+                    audio.onended = () => {
+                        setState('STANDBY');
+                        audio.remove(); // Clean up after it finishes
+                    };
+                }
+
+                typeWriterEffect(`ULTRON: ${data.response}`, 'ai', () => {
+                    if (!data.audio_url) setTimeout(() => setState('STANDBY'), 2000);
+                }, !!data.audio_url);
+                
+            } catch (error) {
+                setState('STANDBY');
+                log(`[ERROR] Core connection lost: ${error.message}`, 'system');
+            }
+        }
+
+        function typeWriterEffect(text, type, callback, hasAudio = false) {
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
+            
+            if (hasAudio) {
+                entry.innerHTML = `<span class="timestamp">[${time}]</span> ${text}`;
+                terminalLog.appendChild(entry);
+                terminalLog.scrollTop = terminalLog.scrollHeight;
+                if (callback) callback();
+            } else {
+                entry.innerHTML = `<span class="timestamp">[${time}]</span> <span class="typewriter-text"></span>`;
+                terminalLog.appendChild(entry);
+                const span = entry.querySelector('.typewriter-text');
+                let i = 0;
+                function type() {
+                    if (i < text.length) {
+                        span.textContent += text.charAt(i);
+                        i++;
+                        terminalLog.scrollTop = terminalLog.scrollHeight;
+                        setTimeout(type, 25);
+                    } else if (callback) callback();
+                }
+                type();
+            }
+        }
+
+        userInput.addEventListener('keypress', function (e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        // Ctrl+Space toggles voice input from anywhere on the page.
+        document.addEventListener('keydown', function (e) {
+            if (e.ctrlKey && e.code === 'Space') {
+                e.preventDefault();
+                toggleMic();
+            }
+        });
+
+        if (!micSupported()) {
+            micButton.disabled = true;
+            micButton.title = 'Microphone capture unsupported in this browser';
+        }
+
+        setTimeout(() => log('[CORE] Ember density optimized.', 'system'), 500);
+        setTimeout(() => log('[CORE] Ready for neural interface.', 'system'), 1000);
+    </script>
+</body>
+</html>
