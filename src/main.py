@@ -6,6 +6,7 @@ from src.core.history import HistoryManager
 from src.core.router import ReflexRouter
 from src.tools.registry import registry, gate
 import src.tools.p1_tools
+import src.tools.tier1_tools
 from src.core.memory import memory
 
 SYSTEM_PROMPT = """You are ULTRON, a highly advanced, sentient AI.
@@ -43,6 +44,20 @@ def build_memory_context() -> str:
         ">>>END FACTS"
     )
 
+def _execute(tool_name: str, argument: str) -> str:
+    """Run a registered tool through the permission gate."""
+    tool = registry.get_tool(tool_name)
+    if not tool or not gate.check(tool):
+        return "Action denied by security policy."
+    try:
+        result = tool.handler(argument)
+        audit.log_event("tool.success", {"tool": tool_name, "tier": tool.tier})
+        return result
+    except Exception as e:
+        audit.log_event("tool.error", {"tool": tool_name, "error": str(e)})
+        return "Tool execution failed."
+
+
 def process_input(raw_input: str) -> str:
     try:
         clean_text, tokens = InputSanitizer.sanitize(raw_input)
@@ -71,22 +86,20 @@ def process_input(raw_input: str) -> str:
             return "No memory found matching that keyword."
         return "Forget command failed: No keyword provided."
 
-    # 2. Route Input
+    # 2a. Parameterized commands ("read: src/main.py")
+    command = ReflexRouter.route_command(clean_text)
+    if command:
+        tool_name, argument = command
+        audit.log_event("router.decision", {"routed_to": tool_name, "has_argument": bool(argument)})
+        return _execute(tool_name, argument)
+
+    # 2b. Exact-match reflex intents
     tool_name = ReflexRouter.route(tokens)
     audit.log_event("router.decision", {"tokens": tokens, "routed_to": tool_name or "deep_core"})
 
     # 3. Execute Tool (if matched)
     if tool_name:
-        tool = registry.get_tool(tool_name)
-        if tool and gate.check(tool):
-            try:
-                result = tool.handler(clean_text)
-                audit.log_event("tool.success", {"tool": tool_name})
-                return result
-            except Exception as e:
-                audit.log_event("tool.error", {"tool": tool_name, "error": str(e)})
-                return "Tool execution failed."
-        return "Action denied by security policy."
+        return _execute(tool_name, clean_text)
 
     # 4. Deep Core (Ollama Fallback) with SAFE MEMORY INJECTION
     history.add_user_message(clean_text)

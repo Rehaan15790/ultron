@@ -30,6 +30,8 @@ Every decision is appended to `logs/audit.jsonl` as one JSON object per line.
 | `src/core/memory.py` | SQLite fact store |
 | `src/tools/registry.py` | Tool registry and tier-based permission gate |
 | `src/tools/p1_tools.py` | Tier 0 tools (clock, telemetry) |
+| `src/tools/tier1_tools.py` | Tier 1 tools (read-only filesystem) |
+| `src/tools/fs_sandbox.py` | Path confinement for Tier 1 |
 | `src/voice/stt.py` | Local speech-to-text (faster-whisper) |
 | `src/server.py` | FastAPI HUD + STT + TTS |
 
@@ -77,6 +79,56 @@ covers the seams — full `process_input` round trips, memory isolation, and the
 HTTP surface. Add new coverage at the integration level; that is where the real
 bugs have shown up.
 
+## Commands
+
+Tier 0 is exact-match and instant. Tier 1 takes an argument and uses an
+explicit `verb: argument` grammar, the same shape as the memory commands.
+
+```
+help / time / date / day / status / system status / cpu / ram
+
+list: src/voice          contents of a directory
+read: src/main.py        contents of a text file
+find: *.py               filenames matching a glob
+search: def process      find text inside project files
+tree:                    project layout
+
+remember: <fact>
+forget: <keyword>
+```
+
+The colon is required. A bare leading verb stays conversational, so
+"read me something" reaches Deep Core rather than being parsed as a file read
+— routing is unambiguous rather than best-guess.
+
+## Tier 1 filesystem access
+
+Read-only, confined to `TOOL_ROOT` (the project directory by default). Nothing
+writes, deletes, moves, or executes.
+
+Every path goes through `fs_sandbox.resolve_path()`, which rejects absolute
+paths, drive letters, UNC paths, traversal that escapes the root, and symlinks
+or junctions pointing outside. Containment is enforced by resolving the path
+and checking it against the root with a separator-aware, case-normalised
+comparison — not by pattern-matching for `..`.
+
+Denied even inside the root: `.env` and friends, `*.key`/`*.pem`, `*.db`,
+`.git/`, `.venv/`, `node_modules/`. Reads are capped at 100KB and 300 lines,
+and binary files are refused.
+
+The threat model is not only the user. Deep Core sees stored memories and its
+own prior turns, both attacker-influenceable, so tool arguments are treated as
+hostile input regardless of where they came from.
+
+To turn Tier 1 off entirely:
+
+```
+ALLOWED_TIERS=[0]
+```
+
+The permission gate, not the router, is the enforcement point — so that single
+change disables every file tool at once.
+
 ## Voice input
 
 Click **SPEAK** (or press **Ctrl+Space**) and talk. Recording stops automatically
@@ -121,6 +173,6 @@ init fails for any reason, transcription silently uses CPU rather than erroring.
 
 ## Not built yet
 
-- **Tier 1 tools.** No file access, shell, or app control yet — this is what
-  would make Ultron useful for actual coding work.
+- **Tier 2 tools.** Nothing writes, deletes, moves, or executes. Any such tool
+  belongs at Tier 2 and must not be enabled by default.
 - **Wake word.** Voice input is push-to-talk; there is no always-on listener.

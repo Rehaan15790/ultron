@@ -41,12 +41,23 @@ def test_history_keeps_system_prompt_first():
 
 # 4. Permission Gate Tests
 def test_gate_allows_tier_0():
-    tool = Tool("test_t0", 0, lambda: "ok")
+    tool = Tool("test_t0", 0, lambda text: "ok")
     assert gate.check(tool) is True
 
-def test_gate_denies_tier_1():
-    tool = Tool("test_t1", 1, lambda: "ok")
+def test_gate_allows_tier_1():
+    # Tier 1 (read-only filesystem) is permitted by current policy.
+    tool = Tool("test_t1", 1, lambda text: "ok")
+    assert gate.check(tool) is True
+
+def test_gate_denies_tier_2():
+    # Tier 2 is reserved for tools that write or execute. Nothing at this tier
+    # exists yet, and the gate must refuse it if one is ever added.
+    tool = Tool("test_t2", 2, lambda text: "ok")
     assert gate.check(tool) is False
+
+def test_gate_denies_unlisted_high_tiers():
+    for tier in (3, 9, 99):
+        assert gate.check(Tool(f"test_t{tier}", tier, lambda text: "ok")) is False
 
 # 5. Registry Safety Tests
 def test_no_forbidden_tools_in_registry():

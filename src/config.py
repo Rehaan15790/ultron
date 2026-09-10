@@ -59,8 +59,17 @@ class Settings(BaseSettings):
     # Paths
     AUDIT_LOG_PATH: Path = Field(Path("logs/audit.jsonl"))
 
-    # P1 Policy
-    ALLOWED_TIERS: list[int] = [0]
+    # Policy. Tier 0 = read-only, no side effects (clock, telemetry).
+    # Tier 1 = read-only filesystem access, confined to TOOL_ROOT.
+    # Nothing that writes, deletes, or executes exists yet; when it does it
+    # belongs at Tier 2 and must not be enabled by default.
+    ALLOWED_TIERS: list[int] = [0, 1]
+
+    # Sandbox root for Tier 1 tools. Everything outside this is unreachable.
+    TOOL_ROOT: Path = Field(Path("."), description="Project directory Ultron may read")
+    FS_MAX_READ_BYTES: int = Field(100_000, description="Refuse to read files larger than this")
+    FS_MAX_LINES: int = Field(300, description="Max lines returned from one file")
+    FS_MAX_RESULTS: int = Field(60, description="Max entries from a list/find/search")
 
     model_config = SettingsConfigDict(
         env_file=".env",

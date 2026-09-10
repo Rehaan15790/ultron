@@ -34,7 +34,17 @@ def read_ram_percent() -> float | None:
 # registry can invoke them uniformly.
 
 def help_handler(text: str) -> str:
-    return "Allowed P1 commands: help, time, date, day, status, system status, cpu, ram"
+    return (
+        "Tier 0 (instant): help, time, date, day, status, system status, cpu, ram\n"
+        "Tier 1 (read-only files, project directory only):\n"
+        "  list: <dir>        contents of a directory\n"
+        "  read: <file>       contents of a text file\n"
+        "  find: <pattern>    filenames matching a glob\n"
+        "  search: <text>     find text inside project files\n"
+        "  tree:              project layout\n"
+        "Memory: 'remember: <fact>' and 'forget: <keyword>'\n"
+        "Anything else goes to Deep Core."
+    )
 
 
 def time_handler(text: str) -> str:
