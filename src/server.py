@@ -9,7 +9,7 @@ from fastapi import FastAPI, File, UploadFile, WebSocket, WebSocketDisconnect
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from src.config import settings
 from src.main import process_input
@@ -66,6 +66,9 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 class ChatMessage(BaseModel):
     text: str
+    # Per-tab conversation. Absent or unknown ids get their own session rather
+    # than sharing one global history.
+    session_id: str = Field("default", max_length=64)
 
 
 def _prune_old_audio() -> None:
@@ -152,7 +155,7 @@ async def transcribe_endpoint(audio: UploadFile = File(...)):
 
 @app.post("/chat")
 async def chat_endpoint(message: ChatMessage):
-    response_text = await asyncio.to_thread(process_input, message.text)
+    response_text = await asyncio.to_thread(process_input, message.text, message.session_id)
 
     audio_url = None
     if response_text and settings.voice_enabled:
@@ -167,15 +170,18 @@ async def chat_endpoint(message: ChatMessage):
 
 @app.websocket("/ws")
 async def websocket_endpoint(websocket: WebSocket):
+    """Pushes telemetry so the HUD does not poll /stats on a timer."""
     await websocket.accept()
     try:
         while True:
             await websocket.send_json({
-                "type": "heartbeat",
-                "status": "listening",
+                "type": "telemetry",
                 "cpu": read_cpu_percent(),
                 "ram": read_ram_percent(),
             })
-            await asyncio.sleep(5)
-    except (WebSocketDisconnect, Exception):
+            await asyncio.sleep(settings.TELEMETRY_INTERVAL)
+    except WebSocketDisconnect:
         pass
+    except Exception as e:
+        # Anything else is a real fault worth recording, not swallowing.
+        audit.log_event("ws.error", {"error": str(e)})

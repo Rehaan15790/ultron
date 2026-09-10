@@ -13,4 +13,9 @@ __pycache__/
 logs/
 ultron_memory.db
 static/audio/
+static/voice_samples/
 *.mp3
+
+# Test fixtures are part of the suite - without them those tests silently
+# skip on a fresh clone instead of failing.
+!tests/fixtures/*.mp3

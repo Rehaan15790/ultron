@@ -3,6 +3,7 @@ from src.config import settings
 from src.security.sanitizer import InputSanitizer, SanitizationError
 from src.security.audit import audit
 from src.core.history import HistoryManager
+from src.core.sessions import SessionStore
 from src.core.router import ReflexRouter
 from src.tools.registry import registry, gate
 import src.tools.p1_tools
@@ -56,7 +57,7 @@ preference: long answers make you slow to respond.
 CRITICAL RULE: You have access to a user profile memory. NEVER list these memories out loud like a database or say "I have added this to your profile."
 Instead, naturally weave the facts you know about the user into your conversation as if you have always known them."""
 
-history = HistoryManager(SYSTEM_PROMPT)
+sessions = SessionStore(SYSTEM_PROMPT)
 
 NO_MEMORIES = "No specific user memories stored yet."
 
@@ -103,7 +104,7 @@ def _execute(tool_name: str, argument: str) -> str:
         return "Tool execution failed."
 
 
-def process_input(raw_input: str) -> str:
+def process_input(raw_input: str, session_id: str = "default") -> str:
     try:
         clean_text, tokens = InputSanitizer.sanitize(raw_input)
         audit.log_event("router.decision", {"input_length": len(clean_text)})
@@ -147,6 +148,7 @@ def process_input(raw_input: str) -> str:
         return _execute(tool_name, clean_text)
 
     # 4. Deep Core (Ollama Fallback) with SAFE MEMORY INJECTION
+    history = sessions.get(session_id)
     history.add_user_message(clean_text)
 
     try:
@@ -177,11 +179,11 @@ def main():
     
     while True:
         try:
-            user_input = input("\nYou: ")
+            user_input = input("\nYou: ")   # CLI keeps its own session
             if user_input.lower().strip() == 'exit':
                 break
             
-            response = process_input(user_input)
+            response = process_input(user_input, session_id="cli")
             print(f"ULTRON: {response}")
             
         except KeyboardInterrupt:

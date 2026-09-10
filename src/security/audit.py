@@ -1,5 +1,6 @@
 import json
 import logging
+from logging.handlers import RotatingFileHandler
 from datetime import datetime, timezone
 from pathlib import Path
 from src.config import settings
@@ -11,8 +12,14 @@ class AuditLogger:
         
         # Prevent adding multiple handlers if imported multiple times
         if not self.logger.handlers:
-            # File Handler (JSON Lines)
-            handler = logging.FileHandler(settings.AUDIT_LOG_PATH)
+            # Rotating file handler (JSON Lines). Every routing decision is
+            # logged, so an unbounded file fills the disk over time.
+            handler = RotatingFileHandler(
+                settings.AUDIT_LOG_PATH,
+                maxBytes=settings.AUDIT_MAX_BYTES,
+                backupCount=settings.AUDIT_BACKUP_COUNT,
+                encoding="utf-8",
+            )
             handler.setFormatter(logging.Formatter('%(message)s'))
             self.logger.addHandler(handler)
             

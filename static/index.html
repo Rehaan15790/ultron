@@ -415,28 +415,110 @@
         }
         setInterval(updateClock, 1000);
         updateClock();
-        async function updateStats() {
-            try {
-                const res = await fetch('/stats');
-                const s = await res.json();
-                if (cpuStat) cpuStat.innerText = (s.cpu === null ? '--' : s.cpu) + '%';
-                if (memStat) memStat.innerText = (s.ram === null ? '--' : s.ram) + '%';
-            } catch (e) {
-                if (cpuStat) cpuStat.innerText = '--%';
-                if (memStat) memStat.innerText = '--%';
-            }
+        function renderStats(s) {
+            if (cpuStat) cpuStat.innerText = (s.cpu === null || s.cpu === undefined ? '--' : s.cpu) + '%';
+            if (memStat) memStat.innerText = (s.ram === null || s.ram === undefined ? '--' : s.ram) + '%';
         }
-        setInterval(updateStats, 2000);
-        updateStats();
 
-        function log(message, type = 'system') {
+        // Telemetry arrives over a single push connection rather than an HTTP
+        // request every 2s. Falls back to polling if the socket cannot open.
+        let statsSocket = null;
+        let statsPollTimer = null;
+
+        function startStatsPolling() {
+            if (statsPollTimer) return;
+            const poll = async () => {
+                try {
+                    renderStats(await (await fetch('/stats')).json());
+                } catch (e) {
+                    renderStats({});
+                }
+            };
+            poll();
+            statsPollTimer = setInterval(poll, 5000);
+        }
+
+        function connectStats() {
+            let socket;
+            try {
+                socket = new WebSocket(`ws://${location.host}/ws`);
+            } catch (e) {
+                startStatsPolling();
+                return;
+            }
+            statsSocket = socket;
+
+            socket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.type === 'telemetry') renderStats(data);
+                } catch (e) { /* ignore malformed frames */ }
+            };
+            socket.onopen = () => {
+                if (statsPollTimer) { clearInterval(statsPollTimer); statsPollTimer = null; }
+            };
+            socket.onclose = () => {
+                statsSocket = null;
+                startStatsPolling();
+                setTimeout(connectStats, 10000);   // try to get the socket back
+            };
+            socket.onerror = () => socket.close();
+        }
+
+        connectStats();
+
+        // Build a log entry without ever parsing untrusted text as HTML.
+        //
+        // Everything shown here is untrusted: model output, what you typed, and
+        // the contents of any file read via 'read:'. Interpolating that into
+        // innerHTML meant a file containing <img src=x onerror=...> executed
+        // script in the HUD as soon as Ultron read it aloud.
+        function makeEntry(type, text) {
             const entry = document.createElement('div');
             entry.className = `log-entry ${type}`;
-            const time = new Date().toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
-            entry.innerHTML = `<span class="timestamp">[${time}]</span> ${message}`;
+
+            const stamp = document.createElement('span');
+            stamp.className = 'timestamp';
+            stamp.textContent = `[${new Date().toLocaleTimeString('en-US',
+                {hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit'})}]`;
+
+            entry.appendChild(stamp);
+            entry.appendChild(document.createTextNode(' '));
+
+            const body = document.createElement('span');
+            body.className = 'entry-text';
+            body.textContent = text;      // textContent, never innerHTML
+            entry.appendChild(body);
+
+            return { entry, body };
+        }
+
+        function appendEntry(entry) {
             terminalLog.appendChild(entry);
             terminalLog.scrollTop = terminalLog.scrollHeight;
         }
+
+        function log(message, type = 'system') {
+            appendEntry(makeEntry(type, message).entry);
+        }
+
+        const TYPE_TICK_MS = 25;
+        const TYPE_CHARS_PER_TICK = 2;
+
+        // One conversation per tab. sessionStorage (not localStorage) so a new
+        // tab starts fresh rather than resuming someone else's thread.
+        const SESSION_ID = (() => {
+            try {
+                let id = sessionStorage.getItem('ultron_session');
+                if (!id) {
+                    id = 'tab_' + Math.random().toString(36).slice(2, 10);
+                    sessionStorage.setItem('ultron_session', id);
+                }
+                return id;
+            } catch (e) {
+                return 'tab_' + Math.random().toString(36).slice(2, 10);
+            }
+        })();
 
         // --- 3. VOICE INPUT (local Whisper via /transcribe) ---
         const micButton = document.getElementById('micButton');
@@ -599,7 +681,7 @@
                 const response = await fetch('/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text })
+                    body: JSON.stringify({ text: text, session_id: SESSION_ID })
                 });
                 
                 const data = await response.json();
@@ -647,30 +729,28 @@
         }
 
         function typeWriterEffect(text, type, callback, hasAudio = false) {
-            const entry = document.createElement('div');
-            entry.className = `log-entry ${type}`;
-            const time = new Date().toLocaleTimeString('en-US', {hour12: false, hour:'2-digit', minute:'2-digit', second:'2-digit'});
-            
+            const { entry, body } = makeEntry(type, hasAudio ? text : '');
+            appendEntry(entry);
+
             if (hasAudio) {
-                entry.innerHTML = `<span class="timestamp">[${time}]</span> ${text}`;
-                terminalLog.appendChild(entry);
-                terminalLog.scrollTop = terminalLog.scrollHeight;
                 if (callback) callback();
-            } else {
-                entry.innerHTML = `<span class="timestamp">[${time}]</span> <span class="typewriter-text"></span>`;
-                terminalLog.appendChild(entry);
-                const span = entry.querySelector('.typewriter-text');
-                let i = 0;
-                function type() {
-                    if (i < text.length) {
-                        span.textContent += text.charAt(i);
-                        i++;
-                        terminalLog.scrollTop = terminalLog.scrollHeight;
-                        setTimeout(type, 25);
-                    } else if (callback) callback();
-                }
-                type();
+                return;
             }
+
+            // Type it out a character at a time. One timer for the whole
+            // string rather than a fresh setTimeout per character.
+            let i = 0;
+            const timer = setInterval(() => {
+                // Append a slice rather than one char so a long reply does not
+                // take 25ms x length to finish.
+                body.textContent += text.slice(i, i + TYPE_CHARS_PER_TICK);
+                i += TYPE_CHARS_PER_TICK;
+                terminalLog.scrollTop = terminalLog.scrollHeight;
+                if (i >= text.length) {
+                    clearInterval(timer);
+                    if (callback) callback();
+                }
+            }, TYPE_TICK_MS);
         }
 
         userInput.addEventListener('keypress', function (e) {

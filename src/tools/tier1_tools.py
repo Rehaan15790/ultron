@@ -13,7 +13,9 @@ from src.tools.fs_sandbox import (
     DENIED_DIRS,
     SandboxError,
     is_binary,
+    is_denied_name,
     iter_files,
+    read_text_if_textual,
     relative_display,
     resolve_path,
     sandbox_root,
@@ -48,11 +50,12 @@ def list_files_handler(arg: str) -> str:
     except OSError as e:
         return f"Could not read that directory: {e}"
 
+    # `target` is already inside the sandbox, so its direct children are too.
+    # A name-only check is enough here; re-resolving every entry cost a
+    # syscall-heavy resolve() per file for no additional safety.
     lines, shown = [], 0
     for entry in entries:
-        try:
-            resolve_path(str(entry.relative_to(sandbox_root())), must_exist=True)
-        except (SandboxError, ValueError):
+        if is_denied_name(entry.name) or entry.name.lower() in DENIED_DIRS:
             continue   # hidden rather than advertised as forbidden
         if shown >= settings.FS_MAX_RESULTS:
             lines.append(f"... and more, truncated at {settings.FS_MAX_RESULTS}")
@@ -132,19 +135,21 @@ def search_files_handler(arg: str) -> str:
     hits = []
 
     for path in iter_files(root, max_files=5000):
-        if is_binary(path):
+        # One open() per file: binary sniff, size cap and read combined.
+        text = read_text_if_textual(path, settings.FS_MAX_READ_BYTES)
+        if text is None:
             continue
-        try:
-            if path.stat().st_size > settings.FS_MAX_READ_BYTES:
-                continue
-            with open(path, "r", encoding="utf-8", errors="replace") as f:
-                for lineno, line in enumerate(f, 1):
-                    if needle_lower in line.lower():
-                        hits.append(f"  {relative_display(path)}:{lineno}: {line.strip()[:120]}")
-                        if len(hits) >= settings.FS_MAX_RESULTS:
-                            break
-        except OSError:
+
+        # Cheap whole-file check first; most files do not match at all, and
+        # this avoids splitting them into lines.
+        if needle_lower not in text.lower():
             continue
+
+        for lineno, line in enumerate(text.splitlines(), 1):
+            if needle_lower in line.lower():
+                hits.append(f"  {relative_display(path)}:{lineno}: {line.strip()[:120]}")
+                if len(hits) >= settings.FS_MAX_RESULTS:
+                    break
         if len(hits) >= settings.FS_MAX_RESULTS:
             break
 

@@ -1,6 +1,7 @@
 import sqlite3
-import json
 from pathlib import Path
+
+from src.config import settings
 
 class MemoryManager:
     def __init__(self, db_path: Path | str = "ultron_memory.db"):
@@ -19,11 +20,23 @@ class MemoryManager:
             """)
 
     def add_memory(self, fact: str, category: str = "general"):
+        fact = (fact or "").strip()
+        if not fact:
+            return False
+        if len(fact) > settings.MEMORY_MAX_FACT_LENGTH:
+            return False
         try:
             with self.conn:
                 self.conn.execute(
                     "INSERT OR IGNORE INTO memories (fact, category) VALUES (?, ?)",
                     (fact, category)
+                )
+                # Every stored fact is replayed into every system message, so
+                # the store is capped rather than allowed to grow forever.
+                self.conn.execute(
+                    "DELETE FROM memories WHERE id NOT IN "
+                    "(SELECT id FROM memories ORDER BY id DESC LIMIT ?)",
+                    (settings.MEMORY_MAX_FACTS,)
                 )
             return True
         except Exception as e:

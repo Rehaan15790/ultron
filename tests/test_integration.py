@@ -10,6 +10,7 @@ import pytest
 from src.core.memory import MemoryManager
 import src.main as ultron
 from src.core.history import HistoryManager
+from src.core.sessions import SessionStore
 
 
 FAILURE_STRINGS = ("Tool execution failed", "Action denied", "Input rejected")
@@ -25,7 +26,8 @@ def isolated_memory(tmp_path, monkeypatch):
 
 @pytest.fixture(autouse=True)
 def clean_history(monkeypatch):
-    monkeypatch.setattr(ultron, "history", HistoryManager(ultron.SYSTEM_PROMPT))
+    """Fresh session store per test, so conversations never leak between them."""
+    monkeypatch.setattr(ultron, "sessions", SessionStore(ultron.SYSTEM_PROMPT))
 
 
 # --- 1. Every reflex tool must actually execute ---
@@ -101,7 +103,7 @@ def test_history_does_not_grow_on_failed_deep_core_call(monkeypatch, isolated_me
 
     monkeypatch.setattr(ultron.ollama, "chat", boom)
     ultron.process_input("tell me a story")
-    assert ultron.history.conversation == []
+    assert ultron.sessions.get("default").conversation == []
 
 
 # --- 4. HTTP surface ---

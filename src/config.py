@@ -58,6 +58,16 @@ class Settings(BaseSettings):
 
     # Paths
     AUDIT_LOG_PATH: Path = Field(Path("logs/audit.jsonl"))
+    AUDIT_MAX_BYTES: int = Field(2_000_000, description="Rotate the audit log past this size")
+    AUDIT_BACKUP_COUNT: int = Field(3, description="Rotated audit logs to keep")
+
+    # Telemetry push interval for the HUD websocket, in seconds.
+    TELEMETRY_INTERVAL: float = 2.0
+
+    # Stored memory limits. Every fact is injected into every system message,
+    # so an unbounded store is paid for on every single turn.
+    MEMORY_MAX_FACTS: int = Field(40, description="Keep only the newest N facts")
+    MEMORY_MAX_FACT_LENGTH: int = Field(300, description="Reject facts longer than this")
 
     # Policy. Tier 0 = read-only, no side effects (clock, telemetry).
     # Tier 1 = read-only filesystem access, confined to TOOL_ROOT.

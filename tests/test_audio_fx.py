@@ -8,7 +8,7 @@ import pytest
 from src.voice.audio_fx import deepen
 
 
-SAMPLE = Path(__file__).parent.parent / "ultron_test.mp3"
+SAMPLE = Path(__file__).parent / "fixtures" / "speech_sample.mp3"
 
 
 def duration_seconds(mp3_bytes: bytes) -> float:
@@ -18,8 +18,9 @@ def duration_seconds(mp3_bytes: bytes) -> float:
 
 @pytest.fixture(scope="module")
 def original() -> bytes:
-    if not SAMPLE.exists():
-        pytest.skip("no sample audio present")
+    # A tracked fixture, so a missing file is a broken checkout - fail loudly
+    # rather than skipping and reporting green.
+    assert SAMPLE.exists(), f"missing tracked fixture: {SAMPLE}"
     return SAMPLE.read_bytes()
 
 

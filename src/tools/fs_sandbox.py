@@ -56,11 +56,17 @@ def sandbox_root() -> Path:
     return Path(settings.TOOL_ROOT).resolve()
 
 
-def _is_denied_name(name: str) -> bool:
+def is_denied_name(name: str) -> bool:
+    """Cheap name-only check. Public so callers already inside the sandbox can
+    filter entries without paying for a full resolve() on each one."""
     lowered = name.lower()
     if lowered in DENIED_NAMES:
         return True
     return any(fnmatch.fnmatch(lowered, pattern) for pattern in DENIED_PATTERNS)
+
+
+# Backwards-compatible private alias.
+_is_denied_name = is_denied_name
 
 
 def _contains_denied_dir(relative: Path) -> bool:
@@ -125,6 +131,28 @@ def is_binary(path: Path) -> bool:
             return b"\x00" in f.read(4096)
     except OSError:
         return True
+
+
+def read_text_if_textual(path: Path, max_bytes: int) -> str | None:
+    """
+    Read a file as text, or return None if it is binary, too large, or
+    unreadable. One open() instead of the stat + sniff + reopen dance.
+    """
+    if path.suffix.lower() in BINARY_EXTENSIONS:
+        return None
+    try:
+        with open(path, "rb") as f:
+            head = f.read(4096)
+            if b"\x00" in head:
+                return None
+            rest = f.read(max_bytes - len(head) + 1)
+    except OSError:
+        return None
+
+    raw = head + rest
+    if len(raw) > max_bytes:
+        return None
+    return raw.decode("utf-8", errors="replace")
 
 
 def relative_display(path: Path) -> str:

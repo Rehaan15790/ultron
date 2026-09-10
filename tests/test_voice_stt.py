@@ -8,8 +8,7 @@ from src.config import settings
 from src.voice import stt
 
 
-PROJECT_ROOT = Path(__file__).parent.parent
-SAMPLE_AUDIO = PROJECT_ROOT / "ultron_test.mp3"
+SAMPLE_AUDIO = Path(__file__).parent / "fixtures" / "speech_sample.mp3"
 
 
 @pytest.fixture(scope="module")
@@ -79,8 +78,8 @@ def test_transcribe_reports_failure_without_crashing(client, monkeypatch):
 
 # --- Real transcription (slow: loads the model) ---
 
-@pytest.mark.skipif(not SAMPLE_AUDIO.exists(), reason="no sample audio present")
 def test_end_to_end_transcription(client):
+    assert SAMPLE_AUDIO.exists(), f"missing tracked fixture: {SAMPLE_AUDIO}"
     with open(SAMPLE_AUDIO, "rb") as f:
         r = client.post("/transcribe", files={"audio": ("sample.mp3", f.read(), "audio/mpeg")})
 
