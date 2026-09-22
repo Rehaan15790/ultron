@@ -42,7 +42,7 @@ class SessionStore:
             return history
 
     def _evict(self, now: float) -> None:
-        expired = [k for k, (_, seen) in self._sessions.items() if now - seen > self._ttl]
+        expired = [k for k, (_, seen) in self._sessions.items() if now - seen >= self._ttl]
         for key in expired:
             del self._sessions[key]
 
