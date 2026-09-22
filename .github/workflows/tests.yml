@@ -1,0 +1,43 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  pytest:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    env:
+      # Hosted runners have no GPU. Go straight to CPU rather than failing
+      # over after a CUDA load error.
+      STT_DEVICE: cpu
+      HF_HUB_DISABLE_SYMLINKS_WARNING: "1"
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      # The CUDA runtime wheels are ~1GB and useless without a GPU.
+      - name: Install dependencies
+        shell: bash
+        run: |
+          grep -v '^nvidia-' requirements.txt > requirements-ci.txt
+          pip install -r requirements-ci.txt
+
+      # test_end_to_end_transcription loads the real speech model. Cache it so
+      # the download is paid once, not on every run.
+      - name: Cache speech model
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/huggingface
+          key: whisper-${{ runner.os }}-small.en
+
+      - run: pytest -q

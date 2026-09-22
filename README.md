@@ -1,5 +1,8 @@
 # ULTRON
 
+[![tests](https://github.com/Rehaan15790/ultron/actions/workflows/tests.yml/badge.svg)](https://github.com/Rehaan15790/ultron/actions/workflows/tests.yml)
+[![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A local voice-driven AI assistant with a command-center interface. Speech in,
 speech out, everything on one machine — reasoning on a local 14B model,
 transcription on local Whisper, and a tiered permission system gating what the
