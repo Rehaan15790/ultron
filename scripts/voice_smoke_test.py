@@ -1,8 +1,13 @@
 """Standalone smoke test for ElevenLabs voice output.
 
 Reads credentials from .env via src.config - no keys in source.
-Run: python test_voice_direct.py
+Run from the project root: python scripts/voice_smoke_test.py
 """
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
 from elevenlabs import save, ElevenLabs
 from src.config import settings
 

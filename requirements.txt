@@ -13,6 +13,10 @@ httpx>=0.27
 faster-whisper>=1.1
 truststore>=0.9
 
+# Pitch shifting (src/voice/audio_fx.py). faster-whisper pulls it in too,
+# but audio_fx imports it directly so it is declared directly.
+av>=11
+
 # CUDA runtime for GPU transcription. Remove these two if you have no NVIDIA
 # GPU - src/voice/stt.py falls back to CPU automatically.
 nvidia-cublas-cu12
