@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 400" width="1280" height="400" role="img" aria-labelledby="title desc">
+  <title id="title">ULTRON</title>
+  <desc id="desc">Local voice assistant. The model is not trusted. Tier 2 does not exist.</desc>
+  <style>
+    .sans { font-family: "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace; }
+    .cursor { animation: blink 1.1s steps(1, end) infinite; }
+    .core { animation: pulse 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+    .bar { animation: eq 1.6s ease-in-out infinite; transform-box: fill-box; transform-origin: 50% 100%; }
+    @keyframes blink { 50% { opacity: 0; } }
+    @keyframes pulse { 50% { opacity: 0.5; transform: scale(0.85); } }
+    @keyframes eq { 50% { transform: scaleY(0.3); } }
+    @media (prefers-reduced-motion: reduce) { .cursor, .core, .bar { animation: none; } }
+  </style>
+  <defs>
+    <pattern id="grid" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" fill="none" stroke="#ff1e3c" stroke-opacity="0.05"/>
+    </pattern>
+    <pattern id="ticks" width="12" height="48" patternUnits="userSpaceOnUse">
+      <rect x="0" y="10" width="2" height="28" fill="#ff1e3c" fill-opacity="0.7"/>
+      <rect x="6" y="18" width="2" height="12" fill="#ff1e3c" fill-opacity="0.35"/>
+    </pattern>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8"/>
+    </filter>
+    <filter id="textglow" x="-20%" y="-60%" width="140%" height="220%">
+      <feGaussianBlur stdDeviation="11"/>
+    </filter>
+  </defs>
+
+  <rect width="1280" height="400" fill="#050507"/>
+  <rect width="1280" height="352" fill="url(#grid)"/>
+
+  <g fill="none" stroke="#ff1e3c">
+    <circle cx="176" cy="172" r="84" stroke-opacity="0.35" stroke-width="10" stroke-dasharray="2 9"/>
+    <circle cx="176" cy="172" r="70" stroke-opacity="0.6" stroke-width="1.5"/>
+    <circle cx="176" cy="172" r="54" stroke-opacity="0.9" stroke-width="3" stroke-dasharray="60 24"/>
+    <path d="M176 78V98M176 246V266M82 172H102M250 172H270" stroke-opacity="0.8" stroke-width="2"/>
+  </g>
+  <circle cx="176" cy="172" r="30" fill="#ff1e3c" filter="url(#glow)" fill-opacity="0.8"/>
+  <circle class="core" cx="176" cy="172" r="24" fill="#ff1e3c"/>
+  <circle cx="176" cy="172" r="8" fill="#050507"/>
+
+  <g class="sans" font-size="96" font-weight="900">
+    <text x="300" y="200" textLength="520" lengthAdjust="spacing" fill="#ff1e3c" fill-opacity="0.55" filter="url(#textglow)">ULTRON</text>
+    <text x="300" y="200" textLength="520" lengthAdjust="spacing" fill="#ff1e3c">ULTRON</text>
+  </g>
+  <text x="304" y="242" class="sans" font-size="20" font-weight="600" fill="#8b8f9e" textLength="430" lengthAdjust="spacing">LOCAL VOICE ASSISTANT</text>
+
+  <text x="304" y="302" class="mono" font-size="20" textLength="288" lengthAdjust="spacingAndGlyphs"><tspan fill="#ff1e3c">$</tspan><tspan fill="#d2d4dc"> uvicorn src.server:app</tspan></text>
+  <rect class="cursor" x="598" y="285" width="11" height="21" fill="#ff1e3c"/>
+
+  <g>
+    <rect class="bar" x="900" y="216" width="8" height="84" fill="#ff1e3c" style="animation-delay:-0.1s"/>
+    <rect class="bar" x="916" y="186" width="8" height="114" fill="#ff1e3c" style="animation-delay:-0.5s"/>
+    <rect class="bar" x="932" y="240" width="8" height="60" fill="#ff1e3c" style="animation-delay:-0.9s"/>
+    <rect class="bar" x="948" y="160" width="8" height="140" fill="#ff1e3c" style="animation-delay:-0.3s"/>
+    <rect class="bar" x="964" y="200" width="8" height="100" fill="#ff1e3c" style="animation-delay:-1.2s"/>
+    <rect class="bar" x="980" y="132" width="8" height="168" fill="#ff1e3c" style="animation-delay:-0.7s"/>
+    <rect class="bar" x="996" y="176" width="8" height="124" fill="#4dd4ff" style="animation-delay:-0.2s"/>
+    <rect class="bar" x="1012" y="112" width="8" height="188" fill="#ff1e3c" style="animation-delay:-1.0s"/>
+    <rect class="bar" x="1028" y="150" width="8" height="150" fill="#ff1e3c" style="animation-delay:-0.4s"/>
+    <rect class="bar" x="1044" y="96" width="8" height="204" fill="#ff1e3c" style="animation-delay:-1.4s"/>
+    <rect class="bar" x="1060" y="140" width="8" height="160" fill="#ff1e3c" style="animation-delay:-0.6s"/>
+    <rect class="bar" x="1076" y="188" width="8" height="112" fill="#4dd4ff" style="animation-delay:-1.1s"/>
+    <rect class="bar" x="1092" y="126" width="8" height="174" fill="#ff1e3c" style="animation-delay:-0.8s"/>
+    <rect class="bar" x="1108" y="170" width="8" height="130" fill="#ff1e3c" style="animation-delay:-0.15s"/>
+    <rect class="bar" x="1124" y="208" width="8" height="92" fill="#ff1e3c" style="animation-delay:-1.3s"/>
+    <rect class="bar" x="1140" y="182" width="8" height="118" fill="#ff1e3c" style="animation-delay:-0.45s"/>
+    <rect class="bar" x="1156" y="230" width="8" height="70" fill="#ff1e3c" style="animation-delay:-0.95s"/>
+    <rect class="bar" x="1172" y="250" width="8" height="50" fill="#ff1e3c" style="animation-delay:-0.35s"/>
+  </g>
+
+  <rect y="352" width="1280" height="48" fill="#0d0d12"/>
+  <rect y="352" width="1280" height="48" fill="url(#ticks)"/>
+  <rect x="96" y="362" width="300" height="28" fill="#050507"/>
+  <text x="112" y="382" class="sans" font-size="14" font-weight="700" fill="#ff1e3c" textLength="268" lengthAdjust="spacing">TIER 2 DOES NOT EXIST</text>
+</svg>
